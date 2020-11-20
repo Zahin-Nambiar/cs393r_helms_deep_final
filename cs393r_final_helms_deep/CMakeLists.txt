@@ -203,3 +203,7 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(frontiers src/frontiers.cpp)
+target_link_libraries(frontiers ${catkin_LIBRARIES})
+#add_dependencies(frontiers cs393r_final_helms_deep_generate_messages_cpp)
