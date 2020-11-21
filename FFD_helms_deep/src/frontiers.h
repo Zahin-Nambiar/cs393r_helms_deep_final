@@ -18,7 +18,7 @@ namespace FFD{
     };
 
     struct frontier_DB{
-        std::vector<frontier> frontiers
+        std::vector<frontier> frontiers;
     };
 
     class Frontier {
