@@ -18,7 +18,7 @@ namespace FFD{
     };
 
     struct frontier_DB{
-        std::vector<frontier> frontiers;
+        std::vector<frontier> frontiers
     };
 
     class Frontier {
@@ -26,3 +26,12 @@ namespace FFD{
             //Appends new frontiers from a contour
             void ExtractNewFrontier(constant Contour c,frontier_DB* new_frontiers_ptr);
             void MaintainFrontiers(frontier_DB* database_ptr, frontier_DB* new_frontiers_ptr, const vector<Vector2f>* active_area_ptr);
+
+        private:
+            
+
+            
+    };
+
+}
+#endif
