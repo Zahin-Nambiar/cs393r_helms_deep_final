@@ -26,11 +26,11 @@ namespace FFD{
             //Appends new frontiers from a contour
             void ExtractNewFrontier(constant Contour c,frontier_DB* new_frontiers_ptr);
             void MaintainFrontiers(frontier_DB* database_ptr, frontier_DB* new_frontiers_ptr, const vector<Vector2f>* active_area_ptr);
-
+            void ReturnClosestFrontier(frontier_DB* databse_ptr,vector<float> robot_pose_ptr)
         private:
             
 
-            
+
     };
 
 }
