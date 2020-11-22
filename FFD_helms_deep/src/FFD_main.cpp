@@ -3,6 +3,7 @@
 #include "geometry_msgs/PoseStamped.h"
 #include "sensor_msgs/LaserScan.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include <tf/transform_listener.h>
 #include <sstream>
 
 #include "contours.h"
@@ -11,7 +12,32 @@
 
 void LaserCallback(const sensor_msgs::LaserScan& msg){
 
-    ROS_INFO("I heard: [%f]", msg.header.stamp.toSec());
+    
+    tf::TransformListener listener;
+    listener.waitForTransform("/base_laser", "/map", ros::Time(0), ros::Duration(10.0));
+    
+    for (int i = 0; i < msg.ranges.size();i++){
+        float range = msg.ranges[i];
+        float angle = msg.angle_min + (i*msg.angle_increment);
+
+        geometry_msgs::PointStamped laser_point;
+        geometry_msgs::PointStamped map_point;
+
+        laser_point.header.frame_id = "base_laser";
+        laser_point.header.stamp = ros::Time();
+        laser_point.point.x = range*cos(angle) ;
+        laser_point.point.y = range*sin(angle) ;
+        laser_point.point.z = 0.0;
+
+        try{
+            listener.transformPoint("map", laser_point, map_point);
+            ROS_INFO("I heard X = [%f] and Y = [%f]", map_point.point.x, map_point.point.y);
+        }
+        catch(tf::TransformException& ex){
+            ROS_ERROR("Received an exception trying to transform a point : %s", ex.what());
+        }
+    }
+    
 
 }
 

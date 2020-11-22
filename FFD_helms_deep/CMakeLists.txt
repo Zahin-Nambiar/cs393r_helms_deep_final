@@ -10,6 +10,7 @@ project(cs393r_final_helms_deep)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
+  tf
 )
 
 ## System dependencies are found with CMake's conventions
