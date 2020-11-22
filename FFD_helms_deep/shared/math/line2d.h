@@ -25,7 +25,7 @@
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
 
-#include "math/geometry.h"
+#include "../math/geometry.h"
 
 #ifndef LINE2D_H
 #define LINE2D_H

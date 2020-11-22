@@ -28,7 +28,7 @@
 
 #include "eigen3/Eigen/Dense"
 #include "eigen3/Eigen/Geometry"
-#include "math/math_util.h"
+#include "../math/math_util.h"
 
 using std::sqrt;
 using math_util::Sq;
