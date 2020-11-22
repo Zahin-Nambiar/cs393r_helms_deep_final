@@ -207,3 +207,7 @@ include_directories(
 #add_executable(frontiers src/frontiers.cpp)
 #target_link_libraries(frontiers ${catkin_LIBRARIES})
 #add_dependencies(frontiers cs393r_final_helms_deep_generate_messages_cpp)
+
+add_executable(FFD_main src/FFD_main.cpp)
+target_link_libraries(FFD_main ${catkin_LIBRARIES})
+add_dependencies(FFD_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
