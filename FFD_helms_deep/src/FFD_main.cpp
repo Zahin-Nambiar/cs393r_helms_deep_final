@@ -1,7 +1,11 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
+
 #include <sstream>
+
+#include "contours.h"
+#include "frontiers.h"
 
 
 int main(int argc, char **argv){

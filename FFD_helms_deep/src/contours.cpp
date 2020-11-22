@@ -44,11 +44,5 @@ void Contour::SampleLine(const line2f line,vector<Vector2f>& cont){
 }
 
 
-
-
-
-
-
-
     
 }

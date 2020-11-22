@@ -1,8 +1,8 @@
 #include <vector>
 #include <list>
 #include "eigen3/Eigen/Dense"
-#include "shared/math/geometry.h"
-#include "math/line2d.h"
+#include "../shared/math/geometry.h"
+#include "../shared/math/line2d.h"
 
 
 #ifndef CONTOURS_H
