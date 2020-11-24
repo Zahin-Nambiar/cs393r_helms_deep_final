@@ -208,14 +208,20 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(frontiers src/frontiers.cpp)
-target_link_libraries(frontiers ${catkin_LIBRARIES})
-add_dependencies(frontiers ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ADD_LIBRARY(LibsModule 
+    src/frontiers.cpp
+    src/contours.cpp
+)
+set_target_properties(LibsModule PROPERTIES LINKER_LANGUAGE CXX)
+
+#add_executable(frontiers src/frontiers.cpp)
+#target_link_libraries(frontiers ${catkin_LIBRARIES})
+#add_dependencies(frontiers ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(FFD_main src/FFD_main.cpp)
-target_link_libraries(FFD_main ${catkin_LIBRARIES})
+target_link_libraries(FFD_main ${catkin_LIBRARIES} LibsModule)
 add_dependencies(FFD_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-add_executable(contours src/contours.cpp)
-target_link_libraries(contours ${catkin_LIBRARIES})
-add_dependencies(contours ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_executable(contours src/contours.cpp)
+#target_link_libraries(contours ${catkin_LIBRARIES})
+#add_dependencies(contours ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
