@@ -1,5 +1,6 @@
 #include <vector>
 #include <list>
+#include <sensor_msgs/PointCloud2.h>
 #include "eigen3/Eigen/Dense"
 #include "../shared/math/geometry.h"
 #include "../shared/math/line2d.h"
@@ -17,18 +18,18 @@ namespace FFD{
 
     
     class Contour {
-        public:
+      public:
+        //Default Constructor
+        Contour();
         //Generate a list of contour points (set resolution of line) from laser scan points
-        void GenerateContour(std::vector<Eigen::Vector2f> laser_scan);
+        void GenerateContour(const sensor_msgs::PointCloud2& laser_coordinates);
         //Generate a vector of points sampled from line and appends to contour
-        void SampleLine(const geometry::line2f line,
-                        std::vector<Eigen::Vector2f>& cont);
+        void SampleLine(const geometry::line2f line);
 
 
-        private:
-            std::vector<Eigen::Vector2f> contour_; //Only one contour in the entire program
-            std::vector<Eigen::Vector2f> empty_contour_; //For resetting contour
-            const float resolution_ = .01; //m : line sampling
+      private:
+        std::vector<sensor_msgs::PointCloud2> contour_; //Only one contour in the entire program
+        const float resolution_; //m : line sampling
     };
 
 }

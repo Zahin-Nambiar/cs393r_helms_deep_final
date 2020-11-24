@@ -1,4 +1,5 @@
 #include "contours.h"
+#include <sensor_msgs/PointCloud2.h>
 
 using geometry::line2f;
 using std::cout;
@@ -11,34 +12,38 @@ using Eigen::Vector2f;
 
 namespace FFD{
 
+Contour::Contour() :
+    resolution_(0.05) //m : line sampling
+{}
+//TODO Change vector vector 2f into pointcloud
 
+void Contour::GenerateContour(const sensor_msgs::PointCloud2& laser_coordinates){
+    contour_.clear(); //Clear old contour to fresh vector 
+    auto& points = laser_coordinates.data;
 
-void Contour::GenerateContour(vector<Vector2f> laser_scan){
-    contour_ = empty_contour_; //Clear old contour to fresh vector 
-
-    for (int i = 0; i < laser_scan.size() - 1; ++i)
+    for (int i = 0; i < points.size() - 1; ++i)
     {
-        line2f segment(laser_scan[i][0],laser_scan[i][1],laser_scan[i+1][0],laser_scan[i+1][1]);
-        SampleLine(segment,contour_);
+        line2f segment(points[i][0],points[i][1],points[i+1][0],points[i+1][1]);
+        SampleLine(segment);
     }
     
     
 }
 
 
-void Contour::SampleLine(const line2f line,vector<Vector2f>& cont){
+void Contour::SampleLine(const line2f line){
 
 
-    float x_range = fabs(line.p0.x() - line.p1.x());
-    float y_range = fabs(line.p0.y() - line.p1.y()); 
-    float line_length = sqrt(pow(x_range,2) + pow(y_range,2));
-    float line_slope = (line.p1.y() - line.p0.y())/(line.p1.x() - line.p0.x());
+    const float x_range = fabs(line.p0.x() - line.p1.x());
+    const float y_range = fabs(line.p0.y() - line.p1.y()); 
+    const float line_length = sqrt(pow(x_range,2) + pow(y_range,2));
+    const float line_slope = (line.p1.y() - line.p0.y())/(line.p1.x() - line.p0.x());
 
-    float x_step = sqrt(pow(resolution_,2)/(1 + pow(line_slope,2)));
+    const float x_step = sqrt(pow(resolution_,2)/(1 + pow(line_slope,2)));
     for (int i = 0; i*x_step<x_range; ++i)
     {
         Vector2f sampled_point (line.p0.x() + i*x_step, line.p0.y() + i*x_step*line_slope);
-        cont.push_back(sampled_point);
+        contour_.push_back(sampled_point);
     }
 
 }

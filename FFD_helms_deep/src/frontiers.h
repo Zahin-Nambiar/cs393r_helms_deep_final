@@ -23,21 +23,22 @@ namespace FFD{
 
     class Frontier {
         public:
+        //TODO fix order in function
             //Appends new frontiers from a contour
             void ExtractNewFrontier(const Contour c,frontier_DB* new_frontiers_ptr);
             
-            
-            void MaintainFrontiers(frontier_DB* database_ptr, frontier_DB* new_frontiers_ptr, const std::vector<Eigen::Vector2f>* active_area_ptr);
+            //DOuble check why two DB
+            void MaintainFrontiers(const std::vector<Eigen::Vector2f> active_area,const frontier_DB new_frontiers,frontier_DB* database_ptr);
             //Does part of new frontier overlap with an existing frontier in the database?
-            void SplitFrontier(frontier_DB* database_ptr, frontier* new_frontier_ptr, const float split);
-            void RemoveFrontier(frontier_DB* database_ptr, frontier* new_frontier_ptr);
-            bool ExistFrontier(frontier_DB* database_ptr, frontier* new_frontier_ptr);
-            void MergeFrontiers(frontier* a_ptr,frontier* b_ptr);
+            void SplitFrontier(const float split,frontier new_frontier, frontier_DB* database_ptr);
+            void RemoveFrontier(frontier new_frontier,frontier_DB* database_ptr);
+            bool ExistFrontier(frontier new_frontier,frontier_DB* database_ptr);
+            void MergeFrontiers(frontier a,frontier b, frontier* new_frontier_ptr);
 
 
 
             //Frontier is a list of points, the robot goal is the average of the frontiers points. The closest average is the frontier average to go. 
-            void ReturnClosestFrontierAverage(frontier_DB* databse_ptr,std::vector<float>* robot_pose_ptr,std::vector<float>* nav_goal_ptr );
+            void ReturnClosestFrontierAverage(frontier_DB database,std::vector<float> robot_pose,std::vector<float>* nav_goal_ptr );
         private:
             
 

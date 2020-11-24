@@ -1,3 +1,8 @@
+//TODO
+//Make main look like navigation_main structure
+//Edit function signature so they follow google guidelines 
+
+
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 #include "geometry_msgs/PoseStamped.h"
@@ -5,40 +10,32 @@
 #include "nav_msgs/OccupancyGrid.h"
 #include <tf/transform_listener.h>
 #include <sstream>
+#include <sensor_msgs/PointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl_ros/point_cloud.h>
 
 #include "contours.h"
 #include "frontiers.h"
+#include "../../laser_geometry-kinetic-devel/include/laser_geometry/laser_geometry.h"
 
+using std::vector;
+using Eigen::Vector2f;
+using FFD::Contour;
+
+Contour* contour_ = nullptr;
 
 void LaserCallback(const sensor_msgs::LaserScan& msg){
-
     
+    sensor_msgs::PointCloud2 laser_in_map;
+    laser_geometry::LaserProjection projector_;
     tf::TransformListener listener;
+
     listener.waitForTransform("/base_laser", "/map", ros::Time(0), ros::Duration(10.0));
-    
-    for (int i = 0; i < msg.ranges.size();i++){
-        float range = msg.ranges[i];
-        float angle = msg.angle_min + (i*msg.angle_increment);
+    projector_.transformLaserScanToPointCloud("/map",msg,laser_in_map,listener);
 
-        geometry_msgs::PointStamped laser_point;
-        geometry_msgs::PointStamped map_point;
-
-        laser_point.header.frame_id = "base_laser";
-        laser_point.header.stamp = ros::Time();
-        laser_point.point.x = range*cos(angle) ;
-        laser_point.point.y = range*sin(angle) ;
-        laser_point.point.z = 0.0;
-
-        try{
-            listener.transformPoint("map", laser_point, map_point);
-            ROS_INFO("I heard X = [%f] and Y = [%f]", map_point.point.x, map_point.point.y);
-        }
-        catch(tf::TransformException& ex){
-            ROS_ERROR("Received an exception trying to transform a point : %s", ex.what());
-        }
-    }
-    
-
+    contour_->GenerateContour(laser_in_map);
 }
 
 void OccupancyMapCallback(const nav_msgs::OccupancyGrid& msg){
@@ -47,24 +44,25 @@ void OccupancyMapCallback(const nav_msgs::OccupancyGrid& msg){
 
 }
 
-
 int main(int argc, char **argv){
 
     ros::init(argc, argv, "FFD");
     ros::NodeHandle n;
+    contour_ = new Contour();
 
-    ros::Subscriber laser_sub = n.subscribe("/scan", 1000, LaserCallback);
-    ros::Subscriber map_sub = n.subscribe("/move_base/global_costmap/costmap", 1000, OccupancyMapCallback);
-    ros::Publisher goal_pub = n.advertise<geometry_msgs::PoseStamped>("exploration_goal", 1000);
+    ros::Subscriber laser_sub = n.subscribe("/scan", 1, LaserCallback);
+    ros::Subscriber map_sub = n.subscribe("/map", 1, OccupancyMapCallback);
+    ros::Publisher goal_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
+    //ros::Publisher contour_pub = n.advertise<sensor_msgs::PointCloud2> ("points2", 1);
+
     ros::Rate loop_rate(10);
 
     while (ros::ok()){
 
-        geometry_msgs::PoseStamped msg;
-        goal_pub.publish(msg);
-
         ros::spinOnce();
         loop_rate.sleep();
     }
+    delete contour_;
+    return 0;
 
 }

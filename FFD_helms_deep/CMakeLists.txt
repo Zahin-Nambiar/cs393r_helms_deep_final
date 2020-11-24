@@ -11,6 +11,9 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   tf
+  pcl_conversions
+  pcl_ros
+  laser_geometry
 )
 
 ## System dependencies are found with CMake's conventions
@@ -105,7 +108,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES cs393r_final_helms_deep
-#  CATKIN_DEPENDS roscpp std_msgs
+#  CATKIN_DEPENDS roscpp std_msgs tf pcl_conversions pcl_ros
 #  DEPENDS system_lib
 )
 
@@ -205,10 +208,14 @@ include_directories(
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-#add_executable(frontiers src/frontiers.cpp)
-#target_link_libraries(frontiers ${catkin_LIBRARIES})
-#add_dependencies(frontiers cs393r_final_helms_deep_generate_messages_cpp)
+add_executable(frontiers src/frontiers.cpp)
+target_link_libraries(frontiers ${catkin_LIBRARIES})
+add_dependencies(frontiers ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(FFD_main src/FFD_main.cpp)
 target_link_libraries(FFD_main ${catkin_LIBRARIES})
 add_dependencies(FFD_main ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+add_executable(contours src/contours.cpp)
+target_link_libraries(contours ${catkin_LIBRARIES})
+add_dependencies(contours ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
