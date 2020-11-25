@@ -30,7 +30,7 @@
 #include "visualization_msgs/Marker.h"
 
 // Custom headers.
-#include "math/math_util.h"
+#include "../math/math_util.h"
 
 #ifndef ROS_HELPERS_H
 #define ROS_HELPERS_H
