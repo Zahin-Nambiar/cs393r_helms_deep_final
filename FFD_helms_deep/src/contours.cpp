@@ -32,6 +32,7 @@ Contour::Contour(ros::NodeHandle* n) :
 
 void Contour::GenerateContour(const sensor_msgs::PointCloud& laser_coordinates){
     contour_.points.clear();
+    contour_.header.frame_id = "/map";
     for (int i = 0; i < laser_coordinates.points.size() - 1; ++i)
     {
          
@@ -52,8 +53,8 @@ void Contour::GenerateContour(const sensor_msgs::PointCloud& laser_coordinates){
 void Contour::SampleLine(const line2f line){
 
 
-    const float x_range = fabs(line.p0.x() - line.p1.x());
-    const float y_range = fabs(line.p0.y() - line.p1.y()); 
+    const float x_range = fabs(line.p1.x() - line.p0.x());
+    const float y_range = fabs(line.p1.y() - line.p0.y()); 
     const float line_length = sqrt(pow(x_range,2) + pow(y_range,2));
     const float line_slope = (line.p1.y() - line.p0.y())/(line.p1.x() - line.p0.x());
 

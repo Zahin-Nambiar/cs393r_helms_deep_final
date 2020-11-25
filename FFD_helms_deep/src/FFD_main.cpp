@@ -36,10 +36,10 @@ sensor_msgs::PointCloud laser_in_map;
 
 void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
-
-    listener->waitForTransform("base_laser", "map", ros::Time::now(), ros::Duration(1.0));
-    projector_.transformLaserScanToPointCloud("map",*msg,laser_in_map,*listener);
     
+
+    listener->waitForTransform("/base_laser", "/map", ros::Time::now(), ros::Duration(3.0));
+    projector_.transformLaserScanToPointCloud("/map",*msg,laser_in_map,*listener);
     
     
     std::cout << laser_in_map.points[0].x<<std::endl;
