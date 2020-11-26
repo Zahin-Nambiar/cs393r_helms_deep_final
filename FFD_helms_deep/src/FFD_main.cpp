@@ -16,8 +16,8 @@
 #include <pcl/point_types.h>
 #include <pcl_ros/point_cloud.h>
 
-#include "contours.h"
-#include "frontiers.h"
+#include "FFD.h"
+
 #include "../../laser_geometry-kinetic-devel/include/laser_geometry/laser_geometry.h"
 
 using std::vector;

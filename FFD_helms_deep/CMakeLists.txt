@@ -209,8 +209,7 @@ include_directories(
 # catkin_add_nosetests(test)
 
 ADD_LIBRARY(LibsModule 
-    src/frontiers.cpp
-    src/contours.cpp
+    src/FFD.cpp
 )
 set_target_properties(LibsModule PROPERTIES LINKER_LANGUAGE CXX)
 

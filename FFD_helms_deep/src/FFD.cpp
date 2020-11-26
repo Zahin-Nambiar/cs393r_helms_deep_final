@@ -1,4 +1,4 @@
-#include "contours.h"
+#include "FFD.h"
 #include <sensor_msgs/PointCloud.h>
 #include "geometry_msgs/Point32.h"
 #include "ros/ros.h"
@@ -57,7 +57,7 @@ void Contour::SampleLine(const line2f line){
     const float y_range = fabs(line.p1.y() - line.p0.y()); 
     const float line_length = sqrt(pow(x_range,2) + pow(y_range,2));
     const float line_slope = (line.p1.y() - line.p0.y())/(line.p1.x() - line.p0.x());
-
+    //X step is always positive because of the square root, if statement later accounts for it
     const float x_step = sqrt(pow(resolution_,2)/(1 + pow(line_slope,2)));
     for (int i = 0; i*x_step<x_range; ++i)
     {
