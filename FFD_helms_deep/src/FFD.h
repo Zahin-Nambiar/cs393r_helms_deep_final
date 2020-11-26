@@ -45,14 +45,14 @@ namespace FFD{
       public:
       //TODO fix order in function
         //Default contructor
-        FrontierDB();
+        FrontierDB(ros::NodeHandle* n);
         //Appends new frontiers from a contour
         void ExtractNewFrontier(Contour c, frontier_vector* new_frontiers_ptr);
             
         //DOuble check why two DB
         void MaintainFrontiers(const std::vector<Eigen::Vector2f> active_area,const frontier_vector new_frontiers);
             //Does part of new frontier overlap with an existing frontier in the database?
-        void SplitFrontier(const float split,frontier new_frontier, frontier_DB* database_ptr);
+        void SplitFrontier(const float split,frontier new_frontier, frontier_vector* database_ptr);
         void RemoveFrontier(const frontier frontier);
         bool ExistFrontier(const frontier frontier);
         void MergeFrontiers(const frontier a,const frontier b, frontier* new_frontier_ptr);
@@ -61,7 +61,7 @@ namespace FFD{
         void ReturnClosestFrontierAverage(const std::vector<float> robot_pose,std::vector<float>* nav_goal_ptr );
 
       private:
-        std::vector<Eigen::Vector2f> frontier_DB
+        frontier_vector frontier_DB;
             
 
     };

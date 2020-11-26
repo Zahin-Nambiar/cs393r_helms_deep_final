@@ -23,24 +23,20 @@
 using std::vector;
 using Eigen::Vector2f;
 using FFD::Contour;
+using FFD::FrontierDB;
 
 
 laser_geometry::LaserProjection projector_;
-//sensor_msgs::PointCloud2 laser_in_map;
-//laser_geometry::LaserProjection projector_;
-Contour* contour = nullptr;
-tf::TransformListener* listener;
-
 sensor_msgs::PointCloud laser_in_map;
+Contour* contour;
+FrontierDB* f_database;
 
+tf::TransformListener* listener;
 
 void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
-    
-
     listener->waitForTransform("/base_laser", "/map", ros::Time::now(), ros::Duration(3.0));
     projector_.transformLaserScanToPointCloud("/map",*msg,laser_in_map,*listener);
-    
     
     std::cout << laser_in_map.points[0].x<<std::endl;
     contour->GenerateContour(laser_in_map);
@@ -57,17 +53,16 @@ int main(int argc, char **argv){
     ros::init(argc, argv, "FFD");
     ros::NodeHandle n;
     contour = new Contour(&n);
-    //tf::TransformListener listener;
+    f_database = new FrontierDB(&n);
+    
     listener = new (tf::TransformListener);
     ros::Subscriber laser_sub = n.subscribe("/scan", 1, LaserCallback);
     ros::Subscriber map_sub = n.subscribe("/map", 1, OccupancyMapCallback);
     ros::Publisher goal_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
-    //ros::Publisher contour_pub = n.advertise<sensor_msgs::PointCloud> ("points", 1);
     
     ros::Rate loop_rate(10);
 
     while (ros::ok()){
-        //contour_pub.publish(laser_in_map);
         ros::spinOnce();
         loop_rate.sleep();
     }

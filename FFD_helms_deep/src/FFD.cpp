@@ -16,26 +16,29 @@ using Eigen::Vector2f;
 using namespace math_util;
 using namespace ros_helpers;
 
-//namespace{
-//ros::Publisher contour_pub_;
-//}
-
 namespace FFD{
 ros::Publisher contour_pub_;
-
+ros::Publisher current_frontier_pub;
 
 Contour::Contour(ros::NodeHandle* n) :
-    resolution_(0.05) {
+    resolution_(0.05) 
+    {
         contour_pub_ = n->advertise<sensor_msgs::PointCloud> ("contour", 1);
     }
-//TODO Change vector vector 2f into pointcloud
+
+FrontierDB::FrontierDB(ros::NodeHandle* n) :
+    frontier_DB()
+    {
+        current_frontier_pub = n->advertise<sensor_msgs::PointCloud> ("latest_frontier", 1);
+    }
 
 void Contour::GenerateContour(const sensor_msgs::PointCloud& laser_coordinates){
+
     contour_.points.clear();
     contour_.header.frame_id = "/map";
+
     for (int i = 0; i < laser_coordinates.points.size() - 1; ++i)
     {
-         
         const float point1_x = laser_coordinates.points[i].x;
         const float point1_y = laser_coordinates.points[i].y;
         const float point2_x = laser_coordinates.points[i+1].x;
@@ -46,12 +49,9 @@ void Contour::GenerateContour(const sensor_msgs::PointCloud& laser_coordinates){
     }
     contour_pub_.publish(contour_);
     return;
-    
 }
 
-
 void Contour::SampleLine(const line2f line){
-
 
     const float x_range = fabs(line.p1.x() - line.p0.x());
     const float y_range = fabs(line.p1.y() - line.p0.y()); 
@@ -71,13 +71,11 @@ void Contour::SampleLine(const line2f line){
             point.x = line.p0.x() + i*x_step;
             point.y = line.p0.y() + i*x_step*line_slope;
         }
-
         point.z = 0.00;
         
         contour_.points.push_back(point);
     }
     return;
-
 }
 
     
