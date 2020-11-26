@@ -15,12 +15,12 @@ namespace ros {
 
 
 namespace FFD{
-
+    // Describes a frontier
     struct frontier {
         std::vector<Eigen::Vector2f> frontier_points;
     };
-
-    struct frontier_DB{
+    // Holds a vector of frontiers for processing
+    struct frontier_vector{
         std::vector<frontier> frontiers;
     };
 
@@ -41,27 +41,28 @@ namespace FFD{
         const float resolution_; //m : line sampling
     };
 
-    class Frontier {
+    class FrontierDB {
       public:
       //TODO fix order in function
+        //Default contructor
+        FrontierDB();
         //Appends new frontiers from a contour
-        void ExtractNewFrontier(Contour c,frontier_DB* new_frontiers_ptr);
+        void ExtractNewFrontier(Contour c, frontier_vector* new_frontiers_ptr);
             
         //DOuble check why two DB
-        void MaintainFrontiers(const std::vector<Eigen::Vector2f> active_area,const frontier_DB new_frontiers,frontier_DB* database_ptr);
+        void MaintainFrontiers(const std::vector<Eigen::Vector2f> active_area,const frontier_vector new_frontiers);
             //Does part of new frontier overlap with an existing frontier in the database?
         void SplitFrontier(const float split,frontier new_frontier, frontier_DB* database_ptr);
-        void RemoveFrontier(frontier new_frontier,frontier_DB* database_ptr);
-        bool ExistFrontier(frontier new_frontier,frontier_DB* database_ptr);
-        void MergeFrontiers(frontier a,frontier b, frontier* new_frontier_ptr);
-
-
+        void RemoveFrontier(const frontier frontier);
+        bool ExistFrontier(const frontier frontier);
+        void MergeFrontiers(const frontier a,const frontier b, frontier* new_frontier_ptr);
 
             //Frontier is a list of points, the robot goal is the average of the frontiers points. The closest average is the frontier average to go. 
-        void ReturnClosestFrontierAverage(frontier_DB database,std::vector<float> robot_pose,std::vector<float>* nav_goal_ptr );
-      private:
-            
+        void ReturnClosestFrontierAverage(const std::vector<float> robot_pose,std::vector<float>* nav_goal_ptr );
 
+      private:
+        std::vector<Eigen::Vector2f> frontier_DB
+            
 
     };
 
