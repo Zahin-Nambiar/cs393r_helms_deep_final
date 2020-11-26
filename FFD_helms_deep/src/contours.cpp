@@ -62,9 +62,16 @@ void Contour::SampleLine(const line2f line){
     for (int i = 0; i*x_step<x_range; ++i)
     {
         geometry_msgs::Point32 point;
+        
+        if(line.p0.x()> line.p1.x()){
+            point.x = line.p0.x() - i*x_step;
+            point.y = line.p0.y() - i*x_step*line_slope;
+        }
+        else{
+            point.x = line.p0.x() + i*x_step;
+            point.y = line.p0.y() + i*x_step*line_slope;
+        }
 
-        point.x = line.p0.x() + i*x_step;
-        point.y = line.p0.y() + i*x_step*line_slope;
         point.z = 0.00;
         
         contour_.points.push_back(point);
