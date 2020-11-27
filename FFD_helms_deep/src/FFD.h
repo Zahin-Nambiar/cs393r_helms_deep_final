@@ -19,7 +19,7 @@ namespace ros {
 namespace FFD{
     // Describes a frontier
     struct frontier {
-        std::vector<Eigen::Vector2f> frontier_points;
+        sensor_msgs::PointCloud frontier_points;
     };
     // Holds a vector of frontiers for processing
     struct frontier_vector{

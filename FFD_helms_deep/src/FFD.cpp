@@ -21,7 +21,7 @@ using namespace ros_helpers;
 
 namespace FFD{
 ros::Publisher contour_pub_;
-ros::Publisher current_frontier_pub;
+ros::Publisher frontier_pub_;
 
 
 
@@ -30,6 +30,7 @@ ros::Publisher current_frontier_pub;
 Contour::Contour(ros::NodeHandle* n) :
     resolution_(0.05) 
     {
+        contour_.header.frame_id = "/map";
         contour_pub_ = n->advertise<sensor_msgs::PointCloud> ("contour", 1);
     }
 
@@ -37,13 +38,12 @@ FrontierDB::FrontierDB(ros::NodeHandle* n) :
     frontier_DB(),
     new_frontiers()
     {
-        current_frontier_pub = n->advertise<sensor_msgs::PointCloud> ("latest_frontier", 1);
+        frontier_pub_ = n->advertise<sensor_msgs::PointCloud> ("latest_frontiers", 1);
     }
 
 void Contour::GenerateContour(const sensor_msgs::PointCloud& laser_coordinates){
 
     contour_.points.clear();
-    contour_.header.frame_id = "/map";
 
     for (int i = 0; i < laser_coordinates.points.size() - 1; ++i)
     {
@@ -94,7 +94,9 @@ sensor_msgs::PointCloud Contour::GetContour(){
 //-------------------------------------------------------------------------
 void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g){
     const sensor_msgs::PointCloud contour = c.GetContour();
+    bool last_pt_frontier = false;
     frontier f;
+    f.frontier_points.header.frame_id = "/map";
 
     for (auto& point : contour.points)
     {
@@ -103,15 +105,30 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
         const int x_cell = (unsigned int)((x - g.info.origin.position.x) / g.info.resolution);
         const int y_cell = (unsigned int)((y - g.info.origin.position.y) / g.info.resolution);
         
-        if (IsCellFrontier(g,x_cell,y_cell))
+
+        if (last_pt_frontier == false && IsCellFrontier(g,x_cell,y_cell))
         {
-            Vector2f p (point.x,point.y);
-            f.frontier_points.push_back(p);
+            f.frontier_points.points.push_back(point);
+            last_pt_frontier = true;
         }
-        
-        //if(g.data[x_cell+g.info.width*y_cell] == -1){
-        //TODO:check if cell frontier->logic to append to new frontier or existing frontier
+        else if(last_pt_frontier == true && IsCellFrontier(g,x_cell,y_cell))
+        {
+            f.frontier_points.points.push_back(point);
+        }
+        else if(last_pt_frontier == true && IsCellFrontier(g,x_cell,y_cell)==false)
+        {
+            frontier_DB.frontiers.push_back(f);
+            last_pt_frontier = false;
+            f.frontier_points.points.clear();
+        }
+
     }
+    for (auto& f: frontier_DB.frontiers)
+    {
+        frontier_pub_.publish(f.frontier_points);
+    }
+    frontier_DB.frontiers.clear();
+
     return;
 }
 
@@ -121,14 +138,22 @@ bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_ce
     const int y_lower = 0;
     const int y_upper = g.info.height;
 
-    for (int i = x_cell-1; i<x_cell+2; ++i)
+    if(g.data[x_cell+y_cell*g.info.width] == -1) 
     {
-        for (int j = y_cell-1; j<y_cell+2; ++j)
+        for (int i = x_cell-1; i<x_cell+2; ++i)
         {
-            int map_loc = i+j*g.info.width;
-            //Is any one of the surrounding cells open?
-            if(i!=x_cell && j!=y_cell && g.data[map_loc]==0){ 
-                return true;
+            for (int j = y_cell-1; j<y_cell+2; ++j)
+            {
+                int map_loc = i+j*g.info.width;
+                //Is cell location valid?
+                if(map_loc >= 0 && map_loc <= g.info.width*g.info.height)
+                {
+                    //Is any one of the surrounding cells open?
+                    if(i!=x_cell && j!=y_cell && g.data[map_loc]==0)
+                    {
+                        return true;
+                    }
+                }
             }
         }
     }
