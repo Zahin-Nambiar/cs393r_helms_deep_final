@@ -26,8 +26,7 @@ namespace FFD{
         std::vector<frontier> frontiers;
     };
 
-    
-    
+
     class Contour {
       public:
         //Default Constructor
