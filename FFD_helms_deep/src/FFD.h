@@ -4,7 +4,9 @@
 #include "eigen3/Eigen/Dense"
 #include "../shared/math/geometry.h"
 #include "../shared/math/line2d.h"
+#include "nav_msgs/OccupancyGrid.h"
 
+using nav_msgs::OccupancyGrid;
 
 #ifndef CONTOURS_H
 #define CONTOURS_H
@@ -34,7 +36,8 @@ namespace FFD{
         void GenerateContour(const sensor_msgs::PointCloud& laser_coordinates);
         //Generate a vector of points sampled from line and appends to contour
         void SampleLine(const geometry::line2f line);
-        
+        //Returns contour data
+        sensor_msgs::PointCloud GetContour();
 
       private:
         sensor_msgs::PointCloud contour_; //Only one contour in the entire program
@@ -46,8 +49,9 @@ namespace FFD{
       //TODO fix order in function
         //Default contructor
         FrontierDB(ros::NodeHandle* n);
-        //Appends new frontiers from a contour
-        void ExtractNewFrontier(Contour c, frontier_vector* new_frontiers_ptr);
+        //Appends new frontiers from contour
+        void ExtractNewFrontier(Contour& c,const nav_msgs::OccupancyGrid& g);
+        bool IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell);
             
         //DOuble check why two DB
         void MaintainFrontiers(const std::vector<Eigen::Vector2f> active_area,const frontier_vector new_frontiers);
@@ -62,7 +66,7 @@ namespace FFD{
 
       private:
         frontier_vector frontier_DB;
-            
+        frontier_vector new_frontiers; 
 
     };
 

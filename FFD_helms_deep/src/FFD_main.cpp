@@ -42,9 +42,10 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     contour->GenerateContour(laser_in_map);
 }
 
-void OccupancyMapCallback(const nav_msgs::OccupancyGrid& msg){
+void OccupancyMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 
-    ROS_INFO("I heard: [%f]", msg.header.stamp.toSec());
+    f_database->ExtractNewFrontier(*contour,*msg);
+    ROS_INFO("I heard: [%f]", (*msg).header.stamp.toSec());
 
 }
 
