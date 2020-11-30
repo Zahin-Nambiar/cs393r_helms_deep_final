@@ -25,11 +25,13 @@ ros::Publisher contour_pub_;
 ros::Publisher frontier_pub_;
 
 
+
 Contour::Contour(ros::NodeHandle* n) :
     resolution_(0.05) 
     {
         contour_.header.frame_id = "/map";
         contour_pub_ = n->advertise<sensor_msgs::PointCloud> ("contour", 1);
+        
     }
 
 FrontierDB::FrontierDB(ros::NodeHandle* n) :
