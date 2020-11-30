@@ -86,12 +86,12 @@ void Contour::SampleLine(const line2f line){
 
 void Contour::UpdateActiveArea(const sensor_msgs::PointCloud& laser_coordinates, const int short_index , const int long_index){
     
-    const float xmin = laser_coordinates.points[short_index].x;
-    const float xmax = laser_coordinates.points[long_index].x;
-    const float ymin = laser_coordinates.points[short_index].y;
-    const float ymax = laser_coordinates.points[long_index].y;
+     float xmin = laser_coordinates.points[short_index].x;
+     float xmax = laser_coordinates.points[long_index].x;
+     float ymin = laser_coordinates.points[short_index].y;
+     float ymax = laser_coordinates.points[long_index].y;
     
-    //Update private variable active area
+    // Update private variable active area
     active_area_.clear();
     active_area_.push_back(xmin);
     active_area_.push_back(xmax);
@@ -108,6 +108,7 @@ sensor_msgs::PointCloud Contour::GetContour(){
 vector<int> Contour::Get_Indices(const sensor_msgs::LaserScan& scan){
     int short_index;
     int long_index;
+    vector<int> indices;
 // Find the short and long index of the laserscan msg in the map frame. 
     for (int i = 0; i < scan.ranges.size(); ++i)
     {
@@ -115,12 +116,12 @@ vector<int> Contour::Get_Indices(const sensor_msgs::LaserScan& scan){
         {
            short_index = i;  
         }
+
         if ( scan.ranges[i] == scan.range_max )
         {
            long_index = i;
         }
     }
-    vector<int> indices;
     indices.push_back(short_index);
     indices.push_back(long_index);
 

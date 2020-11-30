@@ -39,8 +39,9 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     projector_.transformLaserScanToPointCloud("/map",*msg,laser_in_map,*listener);
     
     vector<int> index = contour->Get_Indices(*msg);
-    contour->UpdateActiveArea( laser_in_map, index[0], index[1] );
-    contour->GenerateContour( laser_in_map ); 
+    std::cout << "Min is: " << index[0] <<" "<< "Max is: " << index[1] <<std::endl; 
+    //contour->UpdateActiveArea( laser_in_map, index[0], index[1] );
+    //contour->GenerateContour( laser_in_map ); 
 }
 
 void OccupancyMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
