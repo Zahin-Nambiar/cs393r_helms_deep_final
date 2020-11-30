@@ -5,6 +5,7 @@
 #include "../shared/math/math_util.h"
 #include "../shared/ros/ros_helpers.h"
 #include "nav_msgs/OccupancyGrid.h"
+#include "sensor_msgs/LaserScan.h"
 
 using geometry::line2f;
 using std::cout;
@@ -83,8 +84,47 @@ void Contour::SampleLine(const line2f line){
     return;
 }
 
+void Contour::UpdateActiveArea(const sensor_msgs::PointCloud& laser_coordinates, const int short_index , const int long_index){
+    
+    const float xmin = laser_coordinates.points[short_index].x;
+    const float xmax = laser_coordinates.points[long_index].x;
+    const float ymin = laser_coordinates.points[short_index].y;
+    const float ymax = laser_coordinates.points[long_index].y;
+    
+    //Update private variable active area
+    active_area_.clear();
+    active_area_.push_back(xmin);
+    active_area_.push_back(xmax);
+    active_area_.push_back(ymin);
+    active_area_.push_back(ymax);
+    
+    return;
+}
+
 sensor_msgs::PointCloud Contour::GetContour(){
     return contour_;
+}
+
+vector<int> Contour::Get_Indices(const sensor_msgs::LaserScan& scan){
+    int short_index;
+    int long_index;
+// Find the short and long index of the laserscan msg in the map frame. 
+    for (int i = 0; i < scan.ranges.size(); ++i)
+    {
+        if ( scan.ranges[i] == scan.range_min )
+        {
+           short_index = i;  
+        }
+        if ( scan.ranges[i] == scan.range_max )
+        {
+           long_index = i;
+        }
+    }
+    vector<int> indices;
+    indices.push_back(short_index);
+    indices.push_back(long_index);
+
+    return indices;
 }
 
 //-------------------------------------------------------------------------
@@ -118,33 +158,36 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
         //Save populated frontier, clear and look for new starting point of a new frontier
         else if(last_pt_frontier == true && IsCellFrontier(g,x_cell,y_cell)==false)
         {
-            frontier_DB.frontiers.push_back(f);
+            new_frontiers.frontiers.push_back(f);
             last_pt_frontier = false;
             f.msg.points.clear();
         }
 
     }
     
-    // Combine all frountieer cells for visualization. 
-    frontier current_frontiers;
-    current_frontiers.msg.header.frame_id = "/map";
-    for (auto& frontier:frontier_DB.frontiers)
+    // Combine all frontier pointclouds for visualization. 
+    frontier viz_frontiers;
+    viz_frontiers.msg.header.frame_id = "/map";
+    for (auto& frontier:new_frontiers.frontiers)
     {
         for (auto& point:frontier.msg.points)
         {
             //const float point1_x = frontier.points[i].x;
             //const float point1_y = frontier.points[i].y;
-            current_frontiers.msg.points.push_back(point);
+            viz_frontiers.msg.points.push_back(point);
         }
     }
 
-    //Visualization
-    //for (auto& f: current_frontiers.)
-    //{
-    frontier_pub_.publish(current_frontiers.msg);
-    //}
-    frontier_DB.frontiers.clear();
-    current_frontiers.msg.points.clear();
+    frontier_pub_.publish(viz_frontiers.msg);
+    
+    // Clear new frontier vector 
+    for(auto& frontier : new_frontiers.frontiers )
+    {
+        frontier.msg.points.clear();
+    }
+    viz_frontiers.msg.points.clear();
+    
+    
     return;
 }
 

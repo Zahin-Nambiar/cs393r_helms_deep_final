@@ -38,8 +38,9 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     listener->waitForTransform("/base_laser", "/map", ros::Time::now(), ros::Duration(3.0));
     projector_.transformLaserScanToPointCloud("/map",*msg,laser_in_map,*listener);
     
-    std::cout << laser_in_map.points[0].x<<std::endl;
-    contour->GenerateContour(laser_in_map);
+    vector<int> index = contour->Get_Indices(*msg);
+    contour->UpdateActiveArea( laser_in_map, index[0], index[1] );
+    contour->GenerateContour( laser_in_map ); 
 }
 
 void OccupancyMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
