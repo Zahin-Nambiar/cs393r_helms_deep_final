@@ -95,7 +95,7 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
     const sensor_msgs::PointCloud contour = c.GetContour();
     bool last_pt_frontier = false;
     frontier f;
-    f.frontier_points.header.frame_id = "/map";
+    f.msg.header.frame_id = "/map";
 
     for (auto& point : contour.points)
     {
@@ -107,30 +107,44 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
         //Start populating a new frontier
         if (last_pt_frontier == false && IsCellFrontier(g,x_cell,y_cell))
         {
-            f.frontier_points.points.push_back(point);
+            f.msg.points.push_back(point);
             last_pt_frontier = true;
         }
         //Continue populating a current frontier
         else if(last_pt_frontier == true && IsCellFrontier(g,x_cell,y_cell))
         {
-            f.frontier_points.points.push_back(point);
+            f.msg.points.push_back(point);
         }
         //Save populated frontier, clear and look for new starting point of a new frontier
         else if(last_pt_frontier == true && IsCellFrontier(g,x_cell,y_cell)==false)
         {
             frontier_DB.frontiers.push_back(f);
             last_pt_frontier = false;
-            f.frontier_points.points.clear();
+            f.msg.points.clear();
         }
 
     }
-    //Visualization
-    for (auto& f: frontier_DB.frontiers)
+    
+    // Combine all frountieer cells for visualization. 
+    frontier current_frontiers;
+    current_frontiers.msg.header.frame_id = "/map";
+    for (auto& frontier:frontier_DB.frontiers)
     {
-        frontier_pub_.publish(f.frontier_points);   //Visualize only one frontier out of found set, fix
+        for (auto& point:frontier.msg.points)
+        {
+            //const float point1_x = frontier.points[i].x;
+            //const float point1_y = frontier.points[i].y;
+            current_frontiers.msg.points.push_back(point);
+        }
     }
-    frontier_DB.frontiers.clear();
 
+    //Visualization
+    //for (auto& f: current_frontiers.)
+    //{
+    frontier_pub_.publish(current_frontiers.msg);
+    //}
+    frontier_DB.frontiers.clear();
+    current_frontiers.msg.points.clear();
     return;
 }
 
