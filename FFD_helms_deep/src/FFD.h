@@ -6,6 +6,8 @@
 #include "../shared/math/line2d.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "sensor_msgs/LaserScan.h"
+#include "geometry_msgs/TransformStamped.h"
+#include "nav_msgs/Odometry.h"
 
 using nav_msgs::OccupancyGrid;
 
@@ -37,7 +39,7 @@ namespace FFD{
         //Generate a vector of points sampled from line and appends to contour
         void SampleLine( const geometry::line2f line );
         //Return active area as ------- from current contour
-        void UpdateActiveArea( const sensor_msgs::PointCloud& laser_coordinates,const int short_index , const int long_index );
+        void UpdateActiveArea( const nav_msgs::Odometry::ConstPtr& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform );
         //Returns contour data
         sensor_msgs::PointCloud GetContour();
 

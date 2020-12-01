@@ -6,6 +6,8 @@
 #include "../shared/ros/ros_helpers.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "sensor_msgs/LaserScan.h"
+#include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/TransformStamped.h"
 
 using geometry::line2f;
 using std::cout;
@@ -17,6 +19,8 @@ using Eigen::Vector2f;
 using nav_msgs::OccupancyGrid;
 using FFD::frontier;
 using FFD::FrontierDB;
+//using sensor_msgs::PointCloud;
+//using geometry_msgs::TransformStamped;
 using namespace math_util;
 using namespace ros_helpers;
 
@@ -86,20 +90,51 @@ void Contour::SampleLine(const line2f line){
     return;
 }
 
-void Contour::UpdateActiveArea(const sensor_msgs::PointCloud& laser_coordinates, const int short_index , const int long_index){
-    
-     float xmin = laser_coordinates.points[short_index].x;
-     float xmax = laser_coordinates.points[long_index].x;
-     float ymin = laser_coordinates.points[short_index].y;
-     float ymax = laser_coordinates.points[long_index].y;
-    
-    // Update private variable active area
-    active_area_.clear();
-    active_area_.push_back(xmin);
-    active_area_.push_back(xmax);
-    active_area_.push_back(ymin);
-    active_area_.push_back(ymax);
-    
+void Contour::UpdateActiveArea( const nav_msgs::Odometry::ConstPtr& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform )
+{
+
+    float xmin;
+    float xmax;
+    float ymin;
+    float ymax;
+
+    // Initialize the distance 
+    float dist_x = 0;
+    float dist_y = 0;
+
+    float robot_x = robot_transform.transform.translation.x + (*msg).pose.pose.position.x; 
+    float robot_y = robot_transform.transform.translation.y + (*msg).pose.pose.position.y;
+
+    for (const auto& point:laser_coordinates.points)
+    {
+        // If distance is greater than previous replace value. 
+        if (  fabs( point.x - robot_x ) > dist_x && fabs( point.y - robot_y ) > dist_y  )
+        {
+           // Update distance value to compare.  
+           dist_x = fabs( point.x - robot_x );
+           dist_y = fabs( point.y - robot_y );
+           
+           // Set new values 
+           float xmax = point.x;
+           float ymax = point.y;
+        }
+        
+        // If distance is less than previous replace value. 
+        if ( fabs( point.x - robot_x ) < dist_x && fabs( point.y - robot_y ) < dist_y  )
+        {
+           // Update distance value to compare. 
+           dist_x = fabs( point.x - robot_x );
+           dist_y = fabs( point.y - robot_y );
+           
+           // Set new values 
+           float xmin = point.x;
+           float ymin = point.y;
+        }
+    }
+
+     std::cout <<"This is x min: " << xmin <<" "<< "This is x max : "<< xmax<< std::endl;
+     std::cout <<"This is y min: " << ymin <<" "<< "This is y max : "<< ymax<< std::endl;
+
     return;
 }
 

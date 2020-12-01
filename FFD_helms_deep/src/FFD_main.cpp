@@ -39,16 +39,15 @@ geometry_msgs::TransformStamped robot_transform;
 Contour* contour;
 FrontierDB* f_database;
 
-tf2_ros::TransformListener* listener;//odom listener
-tf::TransformListener* listener2;//laser listener
+tf2_ros::TransformListener* listener; // Odom listener
+tf::TransformListener* listener2; // Laser listener
 tf2_ros::Buffer* tfBuffer_;
 
 void OdomCallback(const nav_msgs::Odometry::ConstPtr& msg){
 
     try{
         robot_transform = tfBuffer_->lookupTransform("odom","map",ros::Time::now(),ros::Duration(5.0));
-        
-        std::cout << robot_transform.transform.translation.x + (*msg).pose.pose.position.x << std::endl;
+        contour->UpdateActiveArea( msg, laser_in_map, robot_transform );
     }
     catch(ros::Exception &e ){
         ROS_ERROR("Error occured: %s ", e.what());
@@ -64,7 +63,6 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     projector_.transformLaserScanToPointCloud("map",*msg,laser_in_map,*listener2);
     //convertPointCloud2ToPointCloud(laser_in_map_pc2,laser_in_map);
     
-    //contour->UpdateActiveArea( laser_in_map, index[0], index[1] );
     contour->GenerateContour( laser_in_map ); 
 }
 
