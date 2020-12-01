@@ -92,48 +92,49 @@ void Contour::SampleLine(const line2f line){
 
 void Contour::UpdateActiveArea( const nav_msgs::Odometry::ConstPtr& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform )
 {
+    // Calulate robot pose in map frame given transformation.
+    float robot_x = robot_transform.transform.translation.x + (*msg).pose.pose.position.x; 
+    float robot_y = robot_transform.transform.translation.y + (*msg).pose.pose.position.y;
+    //std::cout <<"This is robot x: " << robot_x <<" "<< "This is robot y : "<< robot_y<< std::endl;
 
+    // Initialize the distance and x,y values 
+    float dist_x = 0;
+    float dist_y = 0;
     float xmin;
     float xmax;
     float ymin;
     float ymax;
 
-    // Initialize the distance 
-    float dist_x = 0;
-    float dist_y = 0;
-
-    float robot_x = robot_transform.transform.translation.x + (*msg).pose.pose.position.x; 
-    float robot_y = robot_transform.transform.translation.y + (*msg).pose.pose.position.y;
-
+    // Find max and min laser values from robot frame.
     for (const auto& point:laser_coordinates.points)
     {
+         
+        float update_distance_x = fabs( point.x - robot_x );
+        float update_distance_y = fabs( point.y - robot_y );
+
         // If distance is greater than previous replace value. 
-        if (  fabs( point.x - robot_x ) > dist_x && fabs( point.y - robot_y ) > dist_y  )
+        if (  update_distance_x > dist_x && update_distance_y > dist_y)
         {
-           // Update distance value to compare.  
-           dist_x = fabs( point.x - robot_x );
-           dist_y = fabs( point.y - robot_y );
-           
            // Set new values 
-           float xmax = point.x;
-           float ymax = point.y;
+           xmax = point.x;
+           ymax = point.y;
         }
         
-        // If distance is less than previous replace value. 
-        if ( fabs( point.x - robot_x ) < dist_x && fabs( point.y - robot_y ) < dist_y  )
+        //If distance is less than previous replace value. 
+        if ( update_distance_x < dist_x && update_distance_y < dist_y  )
         {
-           // Update distance value to compare. 
-           dist_x = fabs( point.x - robot_x );
-           dist_y = fabs( point.y - robot_y );
-           
            // Set new values 
-           float xmin = point.x;
-           float ymin = point.y;
+           xmin = point.x;
+           ymin = point.y;
         }
-    }
 
-     std::cout <<"This is x min: " << xmin <<" "<< "This is x max : "<< xmax<< std::endl;
-     std::cout <<"This is y min: " << ymin <<" "<< "This is y max : "<< ymax<< std::endl;
+        // Update distance value to compare against next point. 
+           dist_x = update_distance_x;
+           dist_y = update_distance_y;
+    }
+     //std::cout << "Distance x is " << dist_x << std::endl;
+     //std::cout <<"This is x min: " << xmin <<" "<< "This is x max : "<< xmax<< std::endl;
+     //std::cout <<"This is y min: " << ymin <<" "<< "This is y max : "<< ymax<< std::endl;
 
     return;
 }
