@@ -132,9 +132,16 @@ void Contour::UpdateActiveArea( const nav_msgs::Odometry::ConstPtr& msg , const 
            dist_x = update_distance_x;
            dist_y = update_distance_y;
     }
-     //std::cout << "Distance x is " << dist_x << std::endl;
-     //std::cout <<"This is x min: " << xmin <<" "<< "This is x max : "<< xmax<< std::endl;
-     //std::cout <<"This is y min: " << ymin <<" "<< "This is y max : "<< ymax<< std::endl;
+    //std::cout << "Distance x is " << dist_x << std::endl;
+    //std::cout <<"This is x min: " << xmin <<" "<< "This is x max : "<< xmax<< std::endl;
+    //std::cout <<"This is y min: " << ymin <<" "<< "This is y max : "<< ymax<< std::endl;
+
+    //Update private variable active area
+    active_area_.clear();
+    active_area_.push_back(xmin);
+    active_area_.push_back(xmax);
+    active_area_.push_back(ymin);
+    active_area_.push_back(ymax);
 
     return;
 }
