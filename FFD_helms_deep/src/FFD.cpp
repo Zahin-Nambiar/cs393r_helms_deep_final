@@ -149,6 +149,9 @@ void Contour::UpdateActiveArea( const nav_msgs::Odometry::ConstPtr& msg , const 
 sensor_msgs::PointCloud Contour::GetContour(){
     return contour_;
 }
+vector<float> Contour::GetActiveArea(){
+    return active_area_;
+}
 
 std::vector<float> Contour::GetActiveArea(){
     return active_area_;
