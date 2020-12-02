@@ -150,28 +150,10 @@ sensor_msgs::PointCloud Contour::GetContour(){
     return contour_;
 }
 
-vector<int> Contour::Get_Indices(const sensor_msgs::LaserScan& scan){
-    int short_index;
-    int long_index;
-    vector<int> indices;
-// Find the short and long index of the laserscan msg in the map frame. 
-    for (int i = 0; i < scan.ranges.size(); ++i)
-    {
-        if ( scan.ranges[i] == scan.range_min )
-        {
-           short_index = i;  
-        }
-
-        if ( scan.ranges[i] == scan.range_max )
-        {
-           long_index = i;
-        }
-    }
-    indices.push_back(short_index);
-    indices.push_back(long_index);
-
-    return indices;
+std::vector<float> Contour::GetActiveArea(){
+    return active_area_;
 }
+
 
 //-------------------------------------------------------------------------
 //----------------------------FRONTIER FUNCTIONS---------------------------
@@ -264,6 +246,32 @@ bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_ce
         }
     }
     return false;
+}
+
+void FrontierDB::MaintainFrontiers( frontier_vector new_frontiers, frontier_vector frontier_DB , Contour& c)
+{
+    std::vector<float> active_area = c.GetActiveArea();
+    
+    // Find points that are in the active area. 
+    // for (const auto& points: laser )
+    // {
+
+    // }
+        // Check if between x min and x max and if beween y min and y max
+
+    
+
+    
+
+return;
+}
+
+void FrontierDB::SplitFrontier( const float split,frontier new_frontier, frontier_vector* database_ptr)
+{
+
+
+
+return;
 }
 
 }

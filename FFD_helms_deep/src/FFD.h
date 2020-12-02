@@ -42,9 +42,9 @@ namespace FFD{
         void UpdateActiveArea( const nav_msgs::Odometry::ConstPtr& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform );
         //Returns contour data
         sensor_msgs::PointCloud GetContour();
-
-        //Return indices of shortest and longest range from a lasersc
-        std::vector<int> Get_Indices(const sensor_msgs::LaserScan& scan);
+        //Returns active area data
+        std::vector<float> GetActiveArea();
+        
 
       private:
         sensor_msgs::PointCloud contour_; //Only one contour in the entire program
@@ -62,7 +62,7 @@ namespace FFD{
         bool IsCellFrontier( const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell );
             
         // Double check why two DB
-        void MaintainFrontiers( const std::vector<Eigen::Vector2f> active_area,const frontier_vector new_frontiers );
+        void MaintainFrontiers( frontier_vector new_frontiers, frontier_vector frontier_DB,  Contour& c);
         
         //Does part of new frontier overlap with an existing frontier in the database?
         void SplitFrontier( const float split,frontier new_frontier, frontier_vector* database_ptr);
