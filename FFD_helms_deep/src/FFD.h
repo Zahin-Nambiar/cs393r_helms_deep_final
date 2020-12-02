@@ -61,13 +61,14 @@ namespace FFD{
         bool IsCellFrontier( const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell );
             
         // Double check why two DB
-        void MaintainFrontiers( frontier_vector new_frontiers, frontier_vector frontier_DB,  Contour& c);
+        void MaintainFrontiers( Contour& c , const nav_msgs::OccupancyGrid& graph);
         
         //Does part of new frontier overlap with an existing frontier in the database?
-        void SplitFrontier( const float split,frontier new_frontier, frontier_vector* database_ptr);
-        void RemoveFrontier( const frontier frontier);
-        bool ExistFrontier( const frontier frontier);
+        //void SplitFrontier( const float split,frontier new_frontier, frontier_vector* database_ptr);
+        //void RemoveFrontier( const frontier frontier);
+        bool FrontierOverlaps( const frontier new_frontier,const frontier current_frontier);
         void MergeFrontiers( const frontier a,const frontier b, frontier* new_frontier_ptr);
+        void ClearNewFrontier();
 
         //Frontier is a list of points, the robot goal is the average of the frontiers points. The closest average is the frontier average to go. 
         void ReturnClosestFrontierAverage(const std::vector<float> robot_pose,std::vector<float>* nav_goal_ptr );

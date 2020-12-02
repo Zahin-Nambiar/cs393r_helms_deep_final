@@ -69,6 +69,8 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 void OccupancyMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
 
     f_database->ExtractNewFrontier(*contour,*msg);
+    f_database->MaintainFrontiers(*contour, *msg);
+    
     ROS_INFO("I heard: [%f]", (*msg).header.stamp.toSec());
 
 }

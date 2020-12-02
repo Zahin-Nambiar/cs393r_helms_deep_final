@@ -190,6 +190,7 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
         }
 
     }
+
     
     // Combine all frontier pointclouds for visualization. 
     frontier viz_frontiers;
@@ -205,14 +206,7 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
     }
 
     frontier_pub_.publish(viz_frontiers.msg);
-    
-    // Clear new frontier vector 
-    for(auto& frontier : new_frontiers.frontiers )
-    {
-        frontier.msg.points.clear();
-    }
     viz_frontiers.msg.points.clear();
-    
     
     return;
 }
@@ -246,30 +240,104 @@ bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_ce
     return false;
 }
 
-void FrontierDB::MaintainFrontiers( frontier_vector new_frontiers, frontier_vector frontier_DB , Contour& c)
+void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& graph)
 {
     std::vector<float> active_area = c.GetActiveArea();
-    
+    std::vector<int> no_longer_fc; //Index of no longer frontier points
+    frontier f;//Populating replacement frontier
+
     // Find points that are in the active area. 
-    // for (const auto& points: laser )
-    // {
+    for (int i = 0; i < frontier_DB.frontiers.size(); ++i)
+    {
+        for (int j = 0; j < frontier_DB.frontiers[i].msg.points.size(); ++j) 
+        {
+            const float x = frontier_DB.frontiers[i].msg.points[j].x;
+            const float y = frontier_DB.frontiers[i].msg.points[j].y;
+            
+            // Check if between x min and x max and if beween y min and y max
+            if (x >= active_area[0] && x <= active_area[1] && y >= active_area[2] && y <= active_area[3])
+            {
+                // Calulate cell position.
+                const int x_cell = (unsigned int)((x - graph.info.origin.position.x) / graph.info.resolution);
+                const int y_cell = (unsigned int)((y - graph.info.origin.position.y) / graph.info.resolution); 
+                
+                // If Cell is not a frontier note its index 
+                if ( IsCellFrontier(graph,x_cell,y_cell) == false )
+                {
+                    no_longer_fc.push_back(j);
+                }
+            }
+        }
+        
+        // Make valid frontier.  
+        for( int k = 0; k < frontier_DB.frontiers[i].msg.points.size(); ++k)
+        {
+            for(auto& p:no_longer_fc)
+            {
+                if(k!=p)
+                {
+                    f.msg.points.push_back(frontier_DB.frontiers[i].msg.points[k]);                    
 
-    // }
-        // Check if between x min and x max and if beween y min and y max
+                }
+            }          
+        }
+        
+        // Erase current frontier and insert new frontier at the begining. 
+        frontier_DB.frontiers.erase(frontier_DB.frontiers.begin()+i);
+        frontier_DB.frontiers.insert(frontier_DB.frontiers.begin(),f);
+        //std::replace (frontier_DB.frontiers.begin(),frontier_DB.frontiers.end(),frontier,f);    
+        no_longer_fc.clear();
+        f.msg.points.clear();
+        
+        //Clear new_frontiers private variable once database updated
+        ClearNewFrontier();
+        //------------------------------------------------------------------------------------------
+        //-----------------------------------MERGE FRONTIERS----------------------------------------
+        //------------------------------------------------------------------------------------------
 
-    
+        
+    }  
 
+return;
+}
+void FrontierDB::ClearNewFrontier()
+{
+    // Clear new frontier vector 
+    for(auto& frontier : new_frontiers.frontiers )
+    {
+        frontier.msg.points.clear();
+    }
     
 
 return;
 }
 
-void FrontierDB::SplitFrontier( const float split,frontier new_frontier, frontier_vector* database_ptr)
+bool FrontierOverlaps(const frontier new_frontier,const frontier current_frontier)
 {
+    const float tolerance = 0.01; // m
+    
+    // Return true if frontier overlaps. 
+    for ( auto& point_new: new_frontier.msg.points)
+    {
+        for (auto& point_old: current_frontier.msg.points)
+        {
+            // Get current and new frontier points.
+            float x = point_old.x;
+            float x1 = point_new.x;
+            float y = point_old.y;
+            float y1 = point_new.y;
 
+            float length = sqrt(pow(x-x1,2) + pow(y-y1,2));
+            
+            // Tolerance check. 
+            if(length <= tolerance)
+            {
+                return true;
+            } 
+        }  
+    }
 
-
-return;
+ return false;
 }
 
 }
