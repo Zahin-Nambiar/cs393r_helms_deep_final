@@ -45,9 +45,6 @@ namespace FFD{
         //Returns bounds for active area
         std::vector<float> GetActiveArea();
 
-        //Return indices of shortest and longest range from a lasersc
-        std::vector<int> Get_Indices(const sensor_msgs::LaserScan& scan);
-
       private:
         sensor_msgs::PointCloud contour_; //Only one contour in the entire program
         const float resolution_; //m : line sampling

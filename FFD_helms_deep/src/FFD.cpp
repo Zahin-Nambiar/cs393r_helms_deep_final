@@ -153,11 +153,6 @@ vector<float> Contour::GetActiveArea(){
     return active_area_;
 }
 
-std::vector<float> Contour::GetActiveArea(){
-    return active_area_;
-}
-
-
 //-------------------------------------------------------------------------
 //----------------------------FRONTIER FUNCTIONS---------------------------
 //-------------------------------------------------------------------------
