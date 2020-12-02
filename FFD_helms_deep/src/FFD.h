@@ -42,6 +42,8 @@ namespace FFD{
         void UpdateActiveArea( const nav_msgs::Odometry::ConstPtr& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform );
         //Returns contour data
         sensor_msgs::PointCloud GetContour();
+        //Returns bounds for active area
+        std::vector<float> GetActiveArea();
 
         //Return indices of shortest and longest range from a lasersc
         std::vector<int> Get_Indices(const sensor_msgs::LaserScan& scan);
