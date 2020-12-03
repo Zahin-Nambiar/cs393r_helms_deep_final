@@ -61,24 +61,28 @@ void OdomCallback(const nav_msgs::Odometry::ConstPtr& msg){
 
 void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
+    // Transform laserscan to pointcloud. 
     listener2->waitForTransform("/base_laser", "/map", ros::Time::now(), ros::Duration(3.0));
-    //convertPointCloudToPointCloud2( laser_in_map,laser_in_map_pc2 );
     projector_.transformLaserScanToPointCloud("map",*msg,laser_in_map,*listener2);
-    //convertPointCloud2ToPointCloud(laser_in_map_pc2,laser_in_map);
+    
+    // Get transform of robot pose to map frame. 
     robot_transform = tfBuffer_->lookupTransform("odom","map",ros::Time::now(),ros::Duration(3.0));
     
+    // Generate a list of contour points (set resolution of line) from laser scan points
     contour->GenerateContour( laser_in_map );
+    
+    // Return active area as ------- from current contour
     contour->UpdateActiveArea( odom_msg, laser_in_map, robot_transform );
     
+    // Appends new frontiers from contour
     f_database->ExtractNewFrontier(*contour, global_map); //Somtimes this segfaults need to find out why.... timing issue
     
-    //f_database->MaintainFrontiers(*contour, global_map); 
-    
-    //f_database->UpdateClosestFrontierAverage(*contour);
+    f_database->MaintainFrontiers(*contour, global_map); 
+    f_database->UpdateClosestFrontierAverage(*contour);
 
-    //Publish closest frontier waypoint to robot.
-    //vector<float> robot_pos = f_database->GetCalculatedWaypoint();
-    //goal_msg = f_database->PublishClosestFrontierAsNavPoint
+    // Publish closest frontier waypoint to robot.
+    vector<float> robot_pos = f_database->GetCalculatedWaypoint();
+    geometry_msgs::PoseStamped goal_msg = f_database->PublishClosestFrontierAsNavPoint(robot_pos);
     
 }
 
