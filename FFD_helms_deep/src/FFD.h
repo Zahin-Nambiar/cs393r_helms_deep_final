@@ -8,6 +8,7 @@
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/TransformStamped.h"
 #include "nav_msgs/Odometry.h"
+#include "geometry_msgs/PoseStamped.h"
 
 using nav_msgs::OccupancyGrid;
 
@@ -75,8 +76,11 @@ namespace FFD{
 
         // Frontier is a list of points, the robot goal is the average of the frontiers points. The closest average is the frontier average to go. 
         void UpdateClosestFrontierAverage(Contour& c);
-        
+
         std::vector<float> GetCalculatedWaypoint();
+        geometry_msgs::PoseStamped PublishClosestFrontierAsNavPoint( std::vector<float> robot_pos );
+
+        
 
       private:
         frontier_vector frontier_DB;

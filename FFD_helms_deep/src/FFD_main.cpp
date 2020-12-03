@@ -43,8 +43,6 @@ FrontierDB* f_database;
 nav_msgs::Odometry odom_msg;
 nav_msgs::OccupancyGrid global_map;
 
-geometry_msgs::PoseStamped goal_msg;
-
 tf2_ros::TransformListener* listener; // Odom listener
 tf::TransformListener* listener2; // Laser listener
 tf2_ros::Buffer* tfBuffer_;
@@ -68,6 +66,7 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     projector_.transformLaserScanToPointCloud("map",*msg,laser_in_map,*listener2);
     //convertPointCloud2ToPointCloud(laser_in_map_pc2,laser_in_map);
     robot_transform = tfBuffer_->lookupTransform("odom","map",ros::Time::now(),ros::Duration(3.0));
+    
     contour->GenerateContour( laser_in_map );
     contour->UpdateActiveArea( odom_msg, laser_in_map, robot_transform );
     
@@ -79,21 +78,8 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
     //Publish closest frontier waypoint to robot.
     //vector<float> robot_pos = f_database->GetCalculatedWaypoint();
+    //goal_msg = f_database->PublishClosestFrontierAsNavPoint
     
-    //std::cout << "GetCalculatedWaypoint ran " << std::endl;
-    
-    //goal_msg.header.frame_id = "map";
-    //goal_msg.header.stamp = ros::Time::now();
-    
-    //goal_msg.pose.position.x = robot_pos[0]; 
-    //goal_msg.pose.position.y = robot_pos[1];
-    // goal_msg.pose.position.z = 0;
-    
-    // goal_msg.pose.orientation.x = 0;
-    // goal_msg.pose.orientation.y = 0;
-    // goal_msg.pose.orientation.z = 1;
-    // goal_msg.pose.orientation.w = 0;
-    // std::cout << "goal ran " << std::endl;
 }
 
 void OccupancyMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){

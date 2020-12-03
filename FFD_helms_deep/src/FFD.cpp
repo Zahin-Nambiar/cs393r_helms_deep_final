@@ -479,6 +479,25 @@ void FrontierDB::UpdateClosestFrontierAverage( Contour& c )
 return;
 }
 
+geometry_msgs::PoseStamped FrontierDB::PublishClosestFrontierAsNavPoint( vector<float> robot_pos )
+{
+    geometry_msgs::PoseStamped goal_msg;
+    goal_msg.header.frame_id = "map";
+    goal_msg.header.stamp = ros::Time::now();
+    
+    goal_msg.pose.position.x = robot_pos[0]; 
+    goal_msg.pose.position.y = robot_pos[1];
+    goal_msg.pose.position.z = 0;
+    
+    goal_msg.pose.orientation.x = 0;
+    goal_msg.pose.orientation.y = 0;
+    goal_msg.pose.orientation.z = 1;
+    goal_msg.pose.orientation.w = 0; 
+
+    return goal_msg;  
+}
+
+
 std::vector<float> FrontierDB::GetCalculatedWaypoint(){
    return calculated_waypoint_;
 }
