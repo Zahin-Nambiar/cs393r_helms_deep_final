@@ -67,22 +67,28 @@ void Contour::SampleLine(const line2f line){
 
     const float x_range = fabs(line.p1.x() - line.p0.x());
     const float y_range = fabs(line.p1.y() - line.p0.y()); 
+
     const float line_length = sqrt(pow(x_range,2) + pow(y_range,2));
     const float line_slope = (line.p1.y() - line.p0.y())/(line.p1.x() - line.p0.x());
-    //X step is always positive because of the square root, if statement later accounts for it
+    
+    // X step is always positive because of the square root, if statement later accounts for it.
     const float x_step = sqrt(pow(resolution_,2)/(1 + pow(line_slope,2)));
+    
     for (int i = 0; i*x_step<x_range; ++i)
     {
         geometry_msgs::Point32 point;
         
-        if(line.p0.x()> line.p1.x()){
+        if(line.p0.x() > line.p1.x())
+        {
             point.x = line.p0.x() - i*x_step;
             point.y = line.p0.y() - i*x_step*line_slope;
         }
-        else{
+        else
+        {
             point.x = line.p0.x() + i*x_step;
             point.y = line.p0.y() + i*x_step*line_slope;
         }
+
         point.z = 0.00;
         
         contour_.points.push_back(point);
@@ -187,7 +193,7 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
             f.msg.points.push_back(point);
         }
         //Save populated frontier, clear and look for new starting point of a new frontier
-        else if(last_pt_frontier == true && IsCellFrontier(g,x_cell,y_cell)==false)
+        else if(last_pt_frontier == true && !IsCellFrontier(g,x_cell,y_cell))
         {
             new_frontiers.frontiers.push_back(f);
             last_pt_frontier = false;
@@ -216,42 +222,99 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
     return;
 }
 
-bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell){
-    const int x_lower = 0 ;
+// bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell){
+//     const int x_lower = 0 ;
+//     const int x_upper = g.info.width ;
+//     const int y_lower = 0;
+//     const int y_upper = g.info.height;
+    
+//     //Is center cell in 3x3 unknown space?
+//     if(g.data[x_cell+y_cell*g.info.width] == -1) 
+//     {
+//         //Check all cells in 3x3 except for center cell
+//         for (int i = x_cell-1; i<x_cell+2; ++i)
+//         {
+//             for (int j = y_cell-1; j<y_cell+2; ++j)
+//             {
+//                 int map_loc = i+j*g.info.width;
+//                 //Is cell location valid?
+//                 if(map_loc >= 0 && map_loc <= g.info.width*g.info.height)
+//                 {
+//                     //Is any one of the surrounding cells open space?
+//                     if( i != x_cell && j != y_cell && g.data[map_loc] == 0)
+//                     {
+//                         return true;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+//     return false;
+// }
+
+
+bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell)
+{
+    //const int x_lower = 0 ;
     const int x_upper = g.info.width ;
-    const int y_lower = 0;
+    //const int y_lower = 0;
     const int y_upper = g.info.height;
+    
     //Is center cell in 3x3 unknown space?
     if(g.data[x_cell+y_cell*g.info.width] == -1) 
     {
-        //Check all cells in 3x3 except for center cell
-        for (int i = x_cell-1; i<x_cell+2; ++i)
+          // Find all surrounding cells by adding +/- 1 to col and row 
+        for ( int col = x_upper-1; col <= x_upper+1; ++col)
         {
-            for (int j = y_cell-1; j<y_cell+2; ++j)
-            {
-                int map_loc = i+j*g.info.width;
-                //Is cell location valid?
-                if(map_loc >= 0 && map_loc <= g.info.width*g.info.height)
+            for ( int row = y_upper-1; row <= y_upper+1; ++row)
+            { 
+                // If the cell given is not center and its within the grid.
+                if ( !((col == x_upper) && (row == y_upper)) && InGrid(g,row, col) )
                 {
-                    //Is any one of the surrounding cells open space?
-                    if(i!=x_cell && j!=y_cell && g.data[map_loc]==0)
+                    int map_loc = col+row*g.info.width;
+                    // Is any one of the surrounding cells open space?
+                    if( col != x_cell && row != y_cell && g.data[map_loc] == 0)
                     {
                         return true;
                     }
                 }
             }
         }
+    } 
+
+return false;
+}
+
+bool FrontierDB::InGrid( const nav_msgs::OccupancyGrid& g ,const int col, const int row  ) const
+{
+
+    const int rows_ = g.info.width ;
+    const int cols_ = g.info.height;
+
+    //Return false if row and col are negative
+    if( row < 0 || 
+        col < 0 ) 
+    {
+      return false;  
     }
-    return false;
+  
+    //Return false if values are greater than given grid.
+    if( row >= rows_ || 
+        col >= cols_ )
+    {
+      return false;    
+    }
+
+ return true;
 }
 
 void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& graph)
 {
     std::vector<float> active_area = c.GetActiveArea();
     std::vector<int> no_longer_fc; //Index of no longer frontier points
-    frontier f;//Populating replacement frontier
+    frontier f; //Populating replacement frontier
 
-    // Remove frontierDB points in the active area////////////////////////////////////////////////////////////////
+    // Remove frontierDB points in the active area
     for (int i = 0; i < frontier_DB.frontiers.size(); ++i)
     {
         for (int j = 0; j < frontier_DB.frontiers[i].msg.points.size(); ++j) 
@@ -273,6 +336,7 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
                 }
             }
         }
+
         // Make valid frontier.  
         for( int k = 0; k < frontier_DB.frontiers[i].msg.points.size(); ++k)
         {
@@ -285,23 +349,26 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
                 }
             }          
         }
+
         // Erase current frontier and insert new frontier at the begining. 
         frontier_DB.frontiers.erase(frontier_DB.frontiers.begin()+i);
-        frontier_DB.frontiers.insert(frontier_DB.frontiers.begin(),f);
-        //std::replace (frontier_DB.frontiers.begin(),frontier_DB.frontiers.end(),frontier,f);    
+        frontier_DB.frontiers.insert(frontier_DB.frontiers.begin(),f);    
         no_longer_fc.clear();
         f.msg.points.clear();
          
     }
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //Merge frontiers or add to database
+
+    // Merge frontiers or add to database
     //MergeFrontiers();
-    //Clear new_frontiers private variable once database updated
+    
+    // Clear new_frontiers private variable once database updated
     ClearNewFrontier();
     
 return;
 }
+
 void FrontierDB::ClearNewFrontier()
 {
     // Clear new frontier vector 
@@ -309,8 +376,6 @@ void FrontierDB::ClearNewFrontier()
     {
         frontier.msg.points.clear();
     }
-    
-
 return;
 }
 

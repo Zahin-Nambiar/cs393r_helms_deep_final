@@ -63,7 +63,8 @@ namespace FFD{
         // Appends new frontiers from contour
         void ExtractNewFrontier( Contour& c, const nav_msgs::OccupancyGrid& g );
         bool IsCellFrontier( const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell );
-            
+        bool InGrid(const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell  ) const;
+
         // Double check why two DB
         void MaintainFrontiers( Contour& c , const nav_msgs::OccupancyGrid& graph);
         void ClearNewFrontier();

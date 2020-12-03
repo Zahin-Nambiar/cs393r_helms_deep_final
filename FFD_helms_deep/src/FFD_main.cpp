@@ -42,6 +42,7 @@ FrontierDB* f_database;
 
 nav_msgs::Odometry odom_msg;
 nav_msgs::OccupancyGrid global_map;
+
 geometry_msgs::PoseStamped goal_msg;
 
 tf2_ros::TransformListener* listener; // Odom listener
@@ -52,7 +53,7 @@ void OdomCallback(const nav_msgs::Odometry::ConstPtr& msg){
 
     try{
         odom_msg = *msg;
-        ROS_INFO("This is ODOM: [%f]", (*msg).header.stamp.toSec());
+        ROS_INFO("ODOM: [%f]", (*msg).header.stamp.toSec());
     }
     catch(ros::Exception &e ){
         ROS_ERROR("Error occured: %s ", e.what());
@@ -66,39 +67,47 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     //convertPointCloudToPointCloud2( laser_in_map,laser_in_map_pc2 );
     projector_.transformLaserScanToPointCloud("map",*msg,laser_in_map,*listener2);
     //convertPointCloud2ToPointCloud(laser_in_map_pc2,laser_in_map);
-    robot_transform = tfBuffer_->lookupTransform("odom","map",ros::Time::now(),ros::Duration(5.0));
+    robot_transform = tfBuffer_->lookupTransform("odom","map",ros::Time::now(),ros::Duration(3.0));
+    contour->GenerateContour( laser_in_map );
     contour->UpdateActiveArea( odom_msg, laser_in_map, robot_transform );
-    contour->GenerateContour( laser_in_map ); 
-    f_database->ExtractNewFrontier(*contour,global_map);
-    std::cout << "ExtractNewFrontier ran " << std::endl;
-    f_database->MaintainFrontiers(*contour, global_map);
-    std::cout << "MaintainFrontiers ran " << std::endl;
-    f_database->UpdateClosestFrontierAverage(*contour);
-    std::cout << "UpdateClosestFrontierAverage ran " << std::endl;
+    
+    f_database->ExtractNewFrontier(*contour, global_map); //Somtimes this segfaults need to find out why.... timing issue
+    
+    //f_database->MaintainFrontiers(*contour, global_map); 
+    
+    //f_database->UpdateClosestFrontierAverage(*contour);
 
     //Publish closest frontier waypoint to robot.
+    //vector<float> robot_pos = f_database->GetCalculatedWaypoint();
     
-    vector<float> robot_pos = f_database->GetCalculatedWaypoint();
-    std::cout << "GetCalculatedWaypoint ran " << std::endl;
+    //std::cout << "GetCalculatedWaypoint ran " << std::endl;
     
-    goal_msg.header.frame_id = "map";
-    goal_msg.header.stamp = ros::Time::now();
+    //goal_msg.header.frame_id = "map";
+    //goal_msg.header.stamp = ros::Time::now();
     
-    goal_msg.pose.position.x = robot_pos[0]; 
-    goal_msg.pose.position.y = robot_pos[1];
-    goal_msg.pose.position.z = 0;
+    //goal_msg.pose.position.x = robot_pos[0]; 
+    //goal_msg.pose.position.y = robot_pos[1];
+    // goal_msg.pose.position.z = 0;
     
-    goal_msg.pose.orientation.x = 0;
-    goal_msg.pose.orientation.y = 0;
-    goal_msg.pose.orientation.z = 1;
-    goal_msg.pose.orientation.w = 0;
-    std::cout << "goal ran " << std::endl;
+    // goal_msg.pose.orientation.x = 0;
+    // goal_msg.pose.orientation.y = 0;
+    // goal_msg.pose.orientation.z = 1;
+    // goal_msg.pose.orientation.w = 0;
+    // std::cout << "goal ran " << std::endl;
 }
 
 void OccupancyMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
-
-    global_map = *msg;
-    ROS_INFO("I heard: [%f]", (*msg).header.stamp.toSec());
+    
+    try{
+        
+        global_map = *msg;
+        ROS_INFO("Occupancy: [%f]", (*msg).header.stamp.toSec());
+    }
+    
+    catch(ros::Exception &e ){
+        ROS_ERROR("Error occured: %s ", e.what());
+    }
+    
 }
 
 int main(int argc, char **argv){
