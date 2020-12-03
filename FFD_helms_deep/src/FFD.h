@@ -11,6 +11,7 @@
 
 using nav_msgs::OccupancyGrid;
 
+
 #ifndef CONTOURS_H
 #define CONTOURS_H
 
@@ -39,13 +40,15 @@ namespace FFD{
         //Generate a vector of points sampled from line and appends to contour
         void SampleLine( const geometry::line2f line );
         //Return active area as ------- from current contour
-        void UpdateActiveArea( const nav_msgs::Odometry::ConstPtr& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform );
+        void UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform );
         //Returns contour data
         sensor_msgs::PointCloud GetContour();
         //Returns bounds for active area
         std::vector<float> GetActiveArea();
-
+        std::vector<float> GetRobotPosition();
       private:
+        
+        std::vector<float> robot_pos_;
         sensor_msgs::PointCloud contour_; //Only one contour in the entire program
         const float resolution_; //m : line sampling
         std::vector<float> active_area_; // xmin, xmax, ymin, ymax
@@ -54,29 +57,31 @@ namespace FFD{
     class FrontierDB {
       public:
       //TODO fix order in function
-        //Default contructor
+        // Default contructor
         FrontierDB( ros::NodeHandle* n );
-        //Appends new frontiers from contour
+        
+        // Appends new frontiers from contour
         void ExtractNewFrontier( Contour& c, const nav_msgs::OccupancyGrid& g );
         bool IsCellFrontier( const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell );
             
         // Double check why two DB
         void MaintainFrontiers( Contour& c , const nav_msgs::OccupancyGrid& graph);
-        
-        //Does part of new frontier overlap with an existing frontier in the database?
-        //void SplitFrontier( const float split,frontier new_frontier, frontier_vector* database_ptr);
-        //void RemoveFrontier( const frontier frontier);
-        bool FrontierOverlaps( const frontier new_frontier,const frontier current_frontier);
-        void MergeFrontiers( const frontier a,const frontier b, frontier* new_frontier_ptr);
         void ClearNewFrontier();
+        bool FrontierOverlaps( const frontier new_frontier,const frontier current_frontier);
+        
+        void MergeFrontiers();
+        bool WithinTolerance(geometry_msgs::Point32 point_a, geometry_msgs::Point32 point_b);
 
-        //Frontier is a list of points, the robot goal is the average of the frontiers points. The closest average is the frontier average to go. 
-        void ReturnClosestFrontierAverage(const std::vector<float> robot_pose,std::vector<float>* nav_goal_ptr );
+        // Frontier is a list of points, the robot goal is the average of the frontiers points. The closest average is the frontier average to go. 
+        void UpdateClosestFrontierAverage(Contour& c);
+        
+        std::vector<float> GetCalculatedWaypoint();
 
       private:
         frontier_vector frontier_DB;
-        frontier_vector new_frontiers; 
-
+        frontier_vector new_frontiers;
+        std::vector<std::vector<float>> frontier_goals; 
+        std::vector<float> calculated_waypoint_;
     };
 
 }
