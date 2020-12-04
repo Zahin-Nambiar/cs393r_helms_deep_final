@@ -106,8 +106,8 @@ void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msg
     robot_pos_ = {robot_x,robot_y};
 
     // Initialize the distance and x,y values 
-    float dist_x = 0;
-    float dist_y = 0;
+    float dist_x = 0.0;
+    float dist_y = 0.0;
     float xmin;
     float xmax;
     float ymin;
@@ -150,7 +150,8 @@ void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msg
     active_area_.push_back(xmax);
     active_area_.push_back(ymin);
     active_area_.push_back(ymax);
-
+    
+    
     return;
 }
 
@@ -321,6 +322,7 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
     // Remove frontierDB points in the active area
     for (int i = 0; i < frontier_DB.frontiers.size(); ++i)
     {
+        
         for (int j = 0; j < frontier_DB.frontiers[i].msg.points.size(); ++j) 
         {
             const float x = frontier_DB.frontiers[i].msg.points[j].x;
@@ -357,32 +359,32 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
         // Erase current frontier and insert new frontier at the begining. 
         frontier_DB.frontiers.erase(frontier_DB.frontiers.begin()+i);
         frontier_DB.frontiers.insert(frontier_DB.frontiers.begin(),f);    
-        //Update frontier_goal_choices pts
-        frontier_goals.clear();
-        
-        for(auto& frontier:frontier_DB.frontiers)
-        {
-            float sum_x = 0.0;
-            float sum_y = 0.0;
-
-            for ( i = 0; i < frontier.msg.points.size(); ++i)
-            {
-                
-                sum_x += frontier.msg.points[i].x;
-                sum_y += frontier.msg.points[i].y;
-            }
-
-            float x_average = sum_x/frontier.msg.points.size();
-            float y_average = sum_y/frontier.msg.points.size();
-
-            vector<float> frontier_average_pt = {x_average,y_average};
-            frontier_goals.push_back(frontier_average_pt);
-
-        }
 
         no_longer_fc.clear();
-        f.msg.points.clear();
-         
+        f.msg.points.clear();   
+    }
+    
+    //Update frontier_goal_choices pts
+    frontier_goals.clear();
+        
+    for(auto& frontier:frontier_DB.frontiers)
+    {
+        float sum_x = 0.0;
+        float sum_y = 0.0;
+
+        for ( int i = 0; i < frontier.msg.points.size(); ++i)
+        {
+                
+            sum_x += frontier.msg.points[i].x;
+            sum_y += frontier.msg.points[i].y;
+        }
+
+        float x_average = sum_x/frontier.msg.points.size();
+        float y_average = sum_y/frontier.msg.points.size();
+
+        vector<float> frontier_average_pt = {x_average,y_average};
+        frontier_goals.push_back(frontier_average_pt);
+
     }
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -489,11 +491,12 @@ void FrontierDB::UpdateClosestFrontierAverage( Contour& c )
     
     float goal_distance = 100000.0;
     vector<float> goal;
-    
+    std::cout << " This is size: " << frontier_goals.size() << std::endl;
     if (frontier_goals.size() > 0)
     {
         for ( auto& frontier_pt: frontier_goals )
         {
+             std::cout << " this is front point x : " << frontier_pt[0] << std::endl;
             float distance_to_pt = sqrt(pow(frontier_pt[0]-robot_pos[0],2) + pow(frontier_pt[1]-robot_pos[1],2));
         
             if ( distance_to_pt < goal_distance)
