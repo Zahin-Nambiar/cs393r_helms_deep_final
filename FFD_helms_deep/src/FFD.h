@@ -78,7 +78,7 @@ namespace FFD{
         void UpdateClosestFrontierAverage(Contour& c);
 
         std::vector<float> GetCalculatedWaypoint();
-        geometry_msgs::PoseStamped PublishClosestFrontierAsNavPoint( std::vector<float> robot_pos );
+        geometry_msgs::PoseStamped PublishClosestFrontierAsNavGoal( std::vector<float> robot_pos );
 
         
 

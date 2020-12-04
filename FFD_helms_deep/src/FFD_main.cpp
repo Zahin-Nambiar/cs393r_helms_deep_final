@@ -32,6 +32,7 @@ using FFD::FrontierDB;
 using sensor_msgs::convertPointCloud2ToPointCloud;
 using sensor_msgs::convertPointCloudToPointCloud2;
 
+
 laser_geometry::LaserProjection projector_;
 sensor_msgs::PointCloud laser_in_map;
 sensor_msgs::PointCloud2 laser_in_map_pc2;
@@ -42,10 +43,13 @@ FrontierDB* f_database;
 
 nav_msgs::Odometry odom_msg;
 nav_msgs::OccupancyGrid global_map;
+geometry_msgs::PoseStamped goal_msg;
 
 tf2_ros::TransformListener* listener; // Odom listener
 tf::TransformListener* listener2; // Laser listener
 tf2_ros::Buffer* tfBuffer_;
+
+bool initial_map_FLAG = false;
 
 void OdomCallback(const nav_msgs::Odometry::ConstPtr& msg){
 
@@ -60,7 +64,8 @@ void OdomCallback(const nav_msgs::Odometry::ConstPtr& msg){
 }
 
 void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
-
+    if(initial_map_FLAG == true)
+    {
     // Transform laserscan to pointcloud. 
     listener2->waitForTransform("/base_laser", "/map", ros::Time::now(), ros::Duration(3.0));
     projector_.transformLaserScanToPointCloud("map",*msg,laser_in_map,*listener2);
@@ -75,6 +80,8 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     contour->UpdateActiveArea( odom_msg, laser_in_map, robot_transform );
     
     // Appends new frontiers from contour
+    //ros::topic::waitForMessage ("/map",*n);
+    
     f_database->ExtractNewFrontier(*contour, global_map); //Somtimes this segfaults need to find out why.... timing issue
     
     f_database->MaintainFrontiers(*contour, global_map); 
@@ -82,11 +89,16 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
     // Publish closest frontier waypoint to robot.
     vector<float> robot_pos = f_database->GetCalculatedWaypoint();
-    geometry_msgs::PoseStamped goal_msg = f_database->PublishClosestFrontierAsNavPoint(robot_pos);
-    
+    goal_msg = f_database->PublishClosestFrontierAsNavGoal(robot_pos);
+    }
 }
 
 void OccupancyMapCallback(const nav_msgs::OccupancyGrid::ConstPtr& msg){
+    
+    if (initial_map_FLAG == false)
+    {
+        initial_map_FLAG = true;
+    }
     
     try{
         
@@ -115,13 +127,13 @@ int main(int argc, char **argv){
     ros::Subscriber laser_sub = n.subscribe("/scan", 1, LaserCallback);
     ros::Subscriber map_sub = n.subscribe("/map", 1, OccupancyMapCallback);
     ros::Publisher goal_pub = n.advertise<geometry_msgs::PoseStamped>("/move_base_simple/goal", 1);
-    
     ros::Rate loop_rate(10);
-
+    
     while (ros::ok()){
+        
         ros::spinOnce();
         //Publish Calculated Goal Message to Rviz
-        //goal_pub.publish(goal_msg);
+        goal_pub.publish(goal_msg);
         loop_rate.sleep();
     }
     delete contour;

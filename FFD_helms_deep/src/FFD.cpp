@@ -236,7 +236,7 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
 //         {
 //             for (int j = y_cell-1; j<y_cell+2; ++j)
 //             {
-//                 int map_loc = i+j*g.info.width;
+//                 int map_loc = i+j*g.info.width; // problem
 //                 //Is cell location valid?
 //                 if(map_loc >= 0 && map_loc <= g.info.width*g.info.height)
 //                 {
@@ -257,19 +257,23 @@ bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_ce
 {
     //const int x_lower = 0 ;
     const int x_upper = g.info.width ;
+    //std::cout << " g width : " << x_upper << std::endl;
     //const int y_lower = 0;
     const int y_upper = g.info.height;
-    
+    //std::cout << " g height : " << y_upper << std::endl;
+
     //Is center cell in 3x3 unknown space?
     if(g.data[x_cell+y_cell*g.info.width] == -1) 
     {
           // Find all surrounding cells by adding +/- 1 to col and row 
-        for ( int col = x_upper-1; col <= x_upper+1; ++col)
+        for ( int col = x_cell-1; col <= x_cell+1; ++col)
         {
-            for ( int row = y_upper-1; row <= y_upper+1; ++row)
+            for ( int row = y_cell-1; row <= y_cell+1; ++row)
             { 
+                //std::cout << " This is col: " << col << std::endl;
+                //std::cout << " This is row: " << row << std::endl;
                 // If the cell given is not center and its within the grid.
-                if ( !((col == x_upper) && (row == y_upper)) && InGrid(g,row, col) )
+                if ( !((col == x_cell) && (row == y_cell)) && InGrid(g,col, row) )
                 {
                     int map_loc = col+row*g.info.width;
                     // Is any one of the surrounding cells open space?
@@ -353,6 +357,29 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
         // Erase current frontier and insert new frontier at the begining. 
         frontier_DB.frontiers.erase(frontier_DB.frontiers.begin()+i);
         frontier_DB.frontiers.insert(frontier_DB.frontiers.begin(),f);    
+        //Update frontier_goal_choices pts
+        frontier_goals.clear();
+        
+        for(auto& frontier:frontier_DB.frontiers)
+        {
+            float sum_x = 0.0;
+            float sum_y = 0.0;
+
+            for ( i = 0; i < frontier.msg.points.size(); ++i)
+            {
+                
+                sum_x += frontier.msg.points[i].x;
+                sum_y += frontier.msg.points[i].y;
+            }
+
+            float x_average = sum_x/frontier.msg.points.size();
+            float y_average = sum_y/frontier.msg.points.size();
+
+            vector<float> frontier_average_pt = {x_average,y_average};
+            frontier_goals.push_back(frontier_average_pt);
+
+        }
+
         no_longer_fc.clear();
         f.msg.points.clear();
          
@@ -361,7 +388,7 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Merge frontiers or add to database
-    //MergeFrontiers();
+    MergeFrontiers();
     
     // Clear new_frontiers private variable once database updated
     ClearNewFrontier();
@@ -458,47 +485,62 @@ void FrontierDB::UpdateClosestFrontierAverage( Contour& c )
 {
 
     std::vector<float> robot_pos = c.GetRobotPosition();
+    //std::cout << "robot pos x : " << robot_pos[0] << " " << "robot pos y : " << robot_pos[1] << std::endl;
+    
     float goal_distance = 100000.0;
     vector<float> goal;
     
-    for ( auto& frontier_pt: frontier_goals )
+    if (frontier_goals.size() > 0)
     {
-        float distance_to_pt = sqrt(pow(frontier_pt[0]-robot_pos[0],2) + pow(frontier_pt[1]-robot_pos[1],2));
-        
-        if ( distance_to_pt < goal_distance)
+        for ( auto& frontier_pt: frontier_goals )
         {
-            goal = frontier_pt;
-            goal_distance = distance_to_pt;
+            float distance_to_pt = sqrt(pow(frontier_pt[0]-robot_pos[0],2) + pow(frontier_pt[1]-robot_pos[1],2));
+        
+            if ( distance_to_pt < goal_distance)
+            {
+                goal = frontier_pt;
+                goal_distance = distance_to_pt;
+            }
         }
+
+        //Set private variable goal waypoint
+        calculated_waypoint_ = goal;
     }
+
     
-    //Set private variable goal waypoint
-    calculated_waypoint_ = goal;
 
 
 return;
 }
 
-geometry_msgs::PoseStamped FrontierDB::PublishClosestFrontierAsNavPoint( vector<float> robot_pos )
+geometry_msgs::PoseStamped FrontierDB::PublishClosestFrontierAsNavGoal( vector<float> robot_pos )
 {
     geometry_msgs::PoseStamped goal_msg;
     goal_msg.header.frame_id = "map";
     goal_msg.header.stamp = ros::Time::now();
-    
+
+    //std::cout << "this is len of robot pos" << " " <<robot_pos.size() << std::endl;
+
     goal_msg.pose.position.x = robot_pos[0]; 
     goal_msg.pose.position.y = robot_pos[1];
-    goal_msg.pose.position.z = 0;
+    goal_msg.pose.position.z = 0.0;
     
-    goal_msg.pose.orientation.x = 0;
-    goal_msg.pose.orientation.y = 0;
-    goal_msg.pose.orientation.z = 1;
-    goal_msg.pose.orientation.w = 0; 
+    goal_msg.pose.orientation.x = 0.0;
+    goal_msg.pose.orientation.y = 0.0;
+    goal_msg.pose.orientation.z = 1.0;
+    goal_msg.pose.orientation.w = 0.0; 
 
     return goal_msg;  
 }
 
 
 std::vector<float> FrontierDB::GetCalculatedWaypoint(){
+   
+    if (frontier_goals.size() == 0 )
+    {
+        calculated_waypoint_ = { 0.0, 0.0 };
+    }
+
    return calculated_waypoint_;
 }
 
