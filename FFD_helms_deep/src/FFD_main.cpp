@@ -89,7 +89,7 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     f_database->UpdateClosestFrontierAverage(*contour);
 
     // Publish closest frontier waypoint to robot.
-    vector<float> robot_pos = f_database->GetCalculatedWaypoint();
+    vector<float> robot_pos = f_database->GetCalculatedWaypoint(*contour);
     goal_msg = f_database->PublishClosestFrontierAsNavGoal(robot_pos);
     ROS_INFO("LASER: [%f]", (*msg).header.stamp.toSec());
     }
@@ -135,7 +135,7 @@ int main(int argc, char **argv){
         
         ros::spinOnce();
         //Publish Calculated Goal Message to Rviz
-        //goal_pub.publish(goal_msg);
+        goal_pub.publish(goal_msg);
         loop_rate.sleep();
     }
     delete contour;
