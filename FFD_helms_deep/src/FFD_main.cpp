@@ -72,7 +72,7 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     //std::cout << "X = :" << laser_in_map.points[0].x; 
     
     // Get transform of robot pose to map frame. 
-    robot_transform = tfBuffer_->lookupTransform("odom","map",ros::Time::now(),ros::Duration(3.0));
+    robot_transform = tfBuffer_->lookupTransform("base_link","map",ros::Time::now(),ros::Duration(3.0));
     
     // Generate a list of contour points (set resolution of line) from laser scan points
     contour->GenerateContour( laser_in_map );
@@ -135,7 +135,7 @@ int main(int argc, char **argv){
         
         ros::spinOnce();
         //Publish Calculated Goal Message to Rviz
-        goal_pub.publish(goal_msg);
+        //goal_pub.publish(goal_msg);
         loop_rate.sleep();
     }
     delete contour;

@@ -158,49 +158,46 @@ void Contour::SampleLine(const line2f line){
 void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform )
 {
     // Calulate robot pose in map frame given transformation.
-    float robot_x = robot_transform.transform.translation.x + msg.pose.pose.position.x; 
-    float robot_y = robot_transform.transform.translation.y + msg.pose.pose.position.y;
+    //float robot_x = robot_transform.transform.translation.x + msg.pose.pose.position.x; 
+    //float robot_y = robot_transform.transform.translation.y + msg.pose.pose.position.y;
+
+    float robot_x = robot_transform.transform.translation.x; 
+    float robot_y = robot_transform.transform.translation.y;
     
     //Update Private Variable
-    robot_pos_ = {robot_x,robot_y};
+    robot_pos_ = { robot_x, robot_y };
 
     // Initialize the distance and x,y values 
     float dist_x = 0.0;
     float dist_y = 0.0;
-    float xmin;
-    float xmax;
-    float ymin;
-    float ymax;
+    float xmin = laser_coordinates.points[0].x;
+    float xmax = laser_coordinates.points[0].x;
+    float ymin = laser_coordinates.points[0].y;
+    float ymax = laser_coordinates.points[0].y;
 
     // Find max and min laser values from robot frame.
-    for (const auto& point:laser_coordinates.points)
+    for ( const auto& point: laser_coordinates.points )
     {
-         
-        float update_distance_x = fabs( point.x - robot_pos_[0]);
-        float update_distance_y = fabs( point.y - robot_pos_[1]);
-
-        // If distance is greater than previous replace value. 
-        if (  update_distance_x > dist_x && update_distance_y > dist_y )
+        if ( point.x < xmin )
         {
-           // Set new values 
-           xmax = point.x;
-           ymax = point.y;
-        }
-    
-        //If distance is less than previous replace value. 
-        if ( update_distance_x < dist_x && update_distance_y < dist_y   )
-        {
-           // Set new values 
            xmin = point.x;
+        }
+        else if ( point.x > xmax )
+        { 
+           xmax = point.x;
+        }
+
+        if ( point.y < ymin )
+        { 
            ymin = point.y;
         }
-
-        // Update distance value to compare against next point. 
-           dist_x = update_distance_x;
-           dist_y = update_distance_y;
+        else if ( point.y > ymax )
+        {
+           ymax = point.y;
+        }
     }
     
-    //Update private variable active area
+
     active_area_.clear();
     active_area_.push_back(xmin);
     active_area_.push_back(xmax);
@@ -209,10 +206,6 @@ void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msg
 
     return;
 }
-
-
-
-
 
 sensor_msgs::PointCloud Contour::GetContour(){
     return contour_;
@@ -383,8 +376,7 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
         {
             const float x = frontier_DB.frontiers[i].msg.points[j].x;
             const float y = frontier_DB.frontiers[i].msg.points[j].y;
-            //std::cout << "point x " << x <<std::endl;
-            
+        
             // Check if between x min and x max and if beween y min and y max
             if (x >= active_area[0] && x <= active_area[1] && y >= active_area[2] && y <= active_area[3])
             {   
@@ -612,7 +604,7 @@ void FrontierDB::UpdateClosestFrontierAverage( Contour& c )
     {
         for ( auto& frontier_pt: frontier_goals )
         {
-            //std::cout << " this is front point x : " << frontier_pt[0] << std::endl;
+            std::cout << " this is front point x : " << frontier_pt[0] << std::endl;
             float distance_to_pt = sqrt(pow(frontier_pt[0]-robot_pos[0],2) + pow(frontier_pt[1]-robot_pos[1],2));
         
             if ( distance_to_pt < goal_distance)
@@ -657,7 +649,7 @@ std::vector<float> FrontierDB::GetCalculatedWaypoint(){
    
     if (frontier_goals.size() == 0 )
     {
-        calculated_waypoint_ = { 0, 0};
+        calculated_waypoint_ = { 0.0 , 0.0 };
     }
 
    return calculated_waypoint_;
