@@ -69,7 +69,7 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     // Transform laserscan to pointcloud. 
     listener2->waitForTransform("/base_laser", "/map", ros::Time::now(), ros::Duration(3.0));
     projector_.transformLaserScanToPointCloud("map",*msg,laser_in_map,*listener2);
-    std::cout << "X = :" << laser_in_map.points[0].x; 
+    //std::cout << "X = :" << laser_in_map.points[0].x; 
     
     // Get transform of robot pose to map frame. 
     robot_transform = tfBuffer_->lookupTransform("odom","map",ros::Time::now(),ros::Duration(3.0));
@@ -85,8 +85,8 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     
     f_database->ExtractNewFrontier(*contour, global_map); //Somtimes this segfaults need to find out why.... timing issue
     
-    //f_database->MaintainFrontiers(*contour, global_map); 
-    //f_database->UpdateClosestFrontierAverage(*contour);
+    f_database->MaintainFrontiers(*contour, global_map); 
+    f_database->UpdateClosestFrontierAverage(*contour);
 
     // Publish closest frontier waypoint to robot.
     vector<float> robot_pos = f_database->GetCalculatedWaypoint();
@@ -135,7 +135,7 @@ int main(int argc, char **argv){
         
         ros::spinOnce();
         //Publish Calculated Goal Message to Rviz
-        //goal_pub.publish(goal_msg);
+        goal_pub.publish(goal_msg);
         loop_rate.sleep();
     }
     delete contour;

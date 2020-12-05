@@ -70,7 +70,8 @@ namespace FFD{
         void MaintainFrontiers( Contour& c , const nav_msgs::OccupancyGrid& graph);
         void ClearNewFrontier();
         bool FrontierOverlaps( const frontier new_frontier,const frontier current_frontier);
-        
+        bool FrontierIsEmpty(frontier frontier);
+
         void MergeFrontiers();
         bool WithinTolerance(geometry_msgs::Point32 point_a, geometry_msgs::Point32 point_b);
 

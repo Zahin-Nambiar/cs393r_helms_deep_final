@@ -8,6 +8,8 @@
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/TransformStamped.h"
+#include <iostream>  
+#include <numeric>  
 
 using geometry::line2f;
 using std::cout;
@@ -18,6 +20,7 @@ using std::vector;
 using Eigen::Vector2f;
 using nav_msgs::OccupancyGrid;
 using FFD::frontier;
+using FFD::frontier_vector;
 using FFD::FrontierDB;
 //using sensor_msgs::PointCloud;
 //using geometry_msgs::TransformStamped;
@@ -96,6 +99,62 @@ void Contour::SampleLine(const line2f line){
     return;
 }
 
+// void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform )
+// {
+//     // Calulate robot pose in map frame given transformation.
+//     float robot_x = robot_transform.transform.translation.x + msg.pose.pose.position.x; 
+//     float robot_y = robot_transform.transform.translation.y + msg.pose.pose.position.y;
+    
+//     //Update Private Variable
+//     robot_pos_ = {robot_x,robot_y};
+
+//     // Initialize the distance and x,y values 
+//     float dist_x = 0.0;
+//     float dist_y = 0.0;
+//     float xmin;
+//     float xmax;
+//     float ymin;
+//     float ymax;
+
+//     // Find max and min laser values from robot frame.
+//     for (const auto& point:laser_coordinates.points)
+//     {
+         
+//         float update_distance_x = fabs( point.x - robot_pos_[0]);
+//         float update_distance_y = fabs( point.y - robot_pos_[1]);
+
+//         // If distance is greater than previous replace value. 
+//         if (  update_distance_x > dist_x && update_distance_y > dist_y)
+//         {
+//            // Set new values 
+//            xmax = point.x;
+//            ymax = point.y;
+//         }
+        
+//         //If distance is less than previous replace value. 
+//         if ( update_distance_x < dist_x && update_distance_y < dist_y  )
+//         {
+//            // Set new values 
+//            xmin = point.x;
+//            ymin = point.y;
+//         }
+
+//         // Update distance value to compare against next point. 
+//            dist_x = update_distance_x;
+//            dist_y = update_distance_y;
+//     }
+    
+//     //Update private variable active area
+//     active_area_.clear();
+//     active_area_.push_back(xmin);
+//     active_area_.push_back(xmax);
+//     active_area_.push_back(ymin);
+//     active_area_.push_back(ymax);
+    
+    
+//     return;
+// }
+
 void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msgs::PointCloud& laser_coordinates,  geometry_msgs::TransformStamped robot_transform )
 {
     // Calulate robot pose in map frame given transformation.
@@ -121,15 +180,15 @@ void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msg
         float update_distance_y = fabs( point.y - robot_pos_[1]);
 
         // If distance is greater than previous replace value. 
-        if (  update_distance_x > dist_x && update_distance_y > dist_y)
+        if (  update_distance_x > dist_x && update_distance_y > dist_y )
         {
            // Set new values 
            xmax = point.x;
            ymax = point.y;
         }
-        
+    
         //If distance is less than previous replace value. 
-        if ( update_distance_x < dist_x && update_distance_y < dist_y  )
+        if ( update_distance_x < dist_x && update_distance_y < dist_y   )
         {
            // Set new values 
            xmin = point.x;
@@ -140,20 +199,20 @@ void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msg
            dist_x = update_distance_x;
            dist_y = update_distance_y;
     }
-    //std::cout << "Distance x is " << dist_x << std::endl;
-    //std::cout <<"This is x min: " << xmin <<" "<< "This is x max : "<< xmax<< std::endl;
-    //std::cout <<"This is y min: " << ymin <<" "<< "This is y max : "<< ymax<< std::endl;
-
+    
     //Update private variable active area
     active_area_.clear();
     active_area_.push_back(xmin);
     active_area_.push_back(xmax);
     active_area_.push_back(ymin);
     active_area_.push_back(ymax);
-    
-    
+
     return;
 }
+
+
+
+
 
 sensor_msgs::PointCloud Contour::GetContour(){
     return contour_;
@@ -194,7 +253,7 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
             f.msg.points.push_back(point);
         }
         //Save populated frontier, clear and look for new starting point of a new frontier
-        else if(last_pt_frontier == true && !IsCellFrontier(g,x_cell,y_cell))
+        else if(last_pt_frontier == true && !IsCellFrontier(g,x_cell,y_cell) && !FrontierIsEmpty(f) )
         {
             new_frontiers.frontiers.push_back(f);
             last_pt_frontier = false;
@@ -256,12 +315,9 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
 
 bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_cell, const int y_cell)
 {
-    //const int x_lower = 0 ;
+
     const int x_upper = g.info.width ;
-    //std::cout << " g width : " << x_upper << std::endl;
-    //const int y_lower = 0;
     const int y_upper = g.info.height;
-    //std::cout << " g height : " << y_upper << std::endl;
 
     //Is center cell in 3x3 unknown space?
     if(g.data[x_cell+y_cell*g.info.width] == -1) 
@@ -271,8 +327,7 @@ bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_ce
         {
             for ( int row = y_cell-1; row <= y_cell+1; ++row)
             { 
-                //std::cout << " This is col: " << col << std::endl;
-                //std::cout << " This is row: " << row << std::endl;
+
                 // If the cell given is not center and its within the grid.
                 if ( !((col == x_cell) && (row == y_cell)) && InGrid(g,col, row) )
                 {
@@ -318,26 +373,32 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
     std::vector<float> active_area = c.GetActiveArea();
     std::vector<int> no_longer_fc; //Index of no longer frontier points
     frontier f; //Populating replacement frontier
+    frontier_vector f_new_DB;
+    std::vector<int> frontier_ind;
 
     // Remove frontierDB points in the active area
     for (int i = 0; i < frontier_DB.frontiers.size(); ++i)
     {
-        
         for (int j = 0; j < frontier_DB.frontiers[i].msg.points.size(); ++j) 
         {
             const float x = frontier_DB.frontiers[i].msg.points[j].x;
             const float y = frontier_DB.frontiers[i].msg.points[j].y;
+            //std::cout << "point x " << x <<std::endl;
             
             // Check if between x min and x max and if beween y min and y max
             if (x >= active_area[0] && x <= active_area[1] && y >= active_area[2] && y <= active_area[3])
-            {
+            {   
                 // Calulate cell position.
-                const int x_cell = (unsigned int)((x - graph.info.origin.position.x) / graph.info.resolution);
-                const int y_cell = (unsigned int)((y - graph.info.origin.position.y) / graph.info.resolution); 
+                 int x_cell = (unsigned int)((x - graph.info.origin.position.x) / graph.info.resolution);
+                 int y_cell = (unsigned int)((y - graph.info.origin.position.y) / graph.info.resolution); 
+                //std::cout << "Cell pos x  " << x_cell <<std::endl;
+                //std::cout << "Cell pos y  " << y_cell <<std::endl;
+                std::cout << "Im in active area " <<std::endl;
                 
                 // If Cell is not a frontier note its index 
                 if ( IsCellFrontier(graph,x_cell,y_cell) == false )
                 {
+                    std::cout << "Cell is not a frontier " <<std::endl;
                     no_longer_fc.push_back(j);
                 }
             }
@@ -345,12 +406,16 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
 
         // Make valid frontier.  
         for( int k = 0; k < frontier_DB.frontiers[i].msg.points.size(); ++k)
-        {
+        {   
+
             for(auto& p:no_longer_fc)
-            {
+            {   
+                //std::cout << "This is f points: "<< f.msg.points[i].x << std::endl;
                 if(k!=p)
                 {
-                    f.msg.points.push_back(frontier_DB.frontiers[i].msg.points[k]);                    
+                    //std::cout << "point k_x: " <<frontier_DB.frontiers[i].msg.points[k].x <<" " << "point k_y: " << frontier_DB.frontiers[i].msg.points[k].y <<std::endl;
+                    f.msg.points.push_back(frontier_DB.frontiers[i].msg.points[k]);
+                    //std::cout << "This is f points: "<< f.msg.points[i].x << std::endl;                    
 
                 }
             }          
@@ -359,33 +424,73 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
         // Erase current frontier and insert new frontier at the begining. 
         frontier_DB.frontiers.erase(frontier_DB.frontiers.begin()+i);
         frontier_DB.frontiers.insert(frontier_DB.frontiers.begin(),f);    
-
+        
         no_longer_fc.clear();
         f.msg.points.clear();   
     }
+   
+    //std::cout << "frontier_DB "<< frontier_DB.frontiers.size() << std::endl;
+
+    for (int i = 0; i < frontier_DB.frontiers.size(); ++i)
+    {   
+        //std::cout << "frontier_DB "<< frontier_DB.frontiers[i].msg.points.size() << std::endl;
+        if ( !FrontierIsEmpty(frontier_DB.frontiers[i]) )
+        {   
+            std::cout << "frontier not empty bouiii" << std::endl;
+            frontier_ind.push_back(i);
+        }
+    }
+
+    // std::cout << "frontier_ind "<< frontier_ind.size() << std::endl;
+    for(auto& p:frontier_ind)
+    {
+        f_new_DB.frontiers.push_back(frontier_DB.frontiers[p]); 
+    }          
     
+    frontier_DB.frontiers.clear();
+    
+    //std::cout << "f_new_DB after "<< f_new_DB.frontiers.size() << std::endl;
+    
+    for(auto& f: f_new_DB.frontiers) // Trying to find out why this is zero. 
+    {
+        frontier_DB.frontiers.push_back(f);
+    } 
+       
+    
+    //frontier_DB = f_new_DB;
+    frontier_ind.clear();
+    f_new_DB.frontiers.clear();
+
     //Update frontier_goal_choices pts
     frontier_goals.clear();
-        
+
+    float sum_x = 0.0;
+    float sum_y = 0.0;
+
     for(auto& frontier:frontier_DB.frontiers)
     {
-        float sum_x = 0.0;
-        float sum_y = 0.0;
-
-        for ( int i = 0; i < frontier.msg.points.size(); ++i)
-        {
-                
-            sum_x += frontier.msg.points[i].x;
-            sum_y += frontier.msg.points[i].y;
+        
+        for ( auto& point:frontier.msg.points)
+        {   
+            //std::cout << "frontier_DB.frontiers size "<< point.x << std::endl;
+            //std::cout << "This is sumx: "<< sum_x << std::endl;
+            sum_x += fabs(point.x);
+            sum_y += fabs(point.y);
         }
-
+       
+        std::cout << "This is xavg x: "<< sum_x << " "<<"This is yavg: " << sum_y << std::endl;
+        std::cout << "This is sumx: "<< sum_x << std::endl;
+    
         float x_average = sum_x/frontier.msg.points.size();
         float y_average = sum_y/frontier.msg.points.size();
+        std::cout << "size of front: "<< frontier.msg.points.size() << std::endl;
 
         vector<float> frontier_average_pt = {x_average,y_average};
+        std::cout << "This is fta x: "<< frontier_average_pt[0] <<" "<< "This is fta y: " << frontier_average_pt[1] << std::endl;
         frontier_goals.push_back(frontier_average_pt);
-
     }
+
+        
     
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -396,6 +501,18 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
     ClearNewFrontier();
     
 return;
+}
+
+bool FrontierDB::FrontierIsEmpty(frontier frontier)
+{   
+    //std::cout << " This is size:  "<< frontier.msg.points.size() << std::endl;
+    if ( frontier.msg.points.empty() )
+    {
+        //std::cout << "This is empty" << std::endl;
+        return true;
+    }
+
+return false;
 }
 
 void FrontierDB::ClearNewFrontier()
@@ -487,16 +604,15 @@ void FrontierDB::UpdateClosestFrontierAverage( Contour& c )
 {
 
     std::vector<float> robot_pos = c.GetRobotPosition();
-    //std::cout << "robot pos x : " << robot_pos[0] << " " << "robot pos y : " << robot_pos[1] << std::endl;
     
     float goal_distance = 100000.0;
     vector<float> goal;
-    std::cout << " This is size: " << frontier_goals.size() << std::endl;
+    //std::cout << " This is size: " << frontier_goals.size() << std::endl;
     if (frontier_goals.size() > 0)
     {
         for ( auto& frontier_pt: frontier_goals )
         {
-             std::cout << " this is front point x : " << frontier_pt[0] << std::endl;
+            //std::cout << " this is front point x : " << frontier_pt[0] << std::endl;
             float distance_to_pt = sqrt(pow(frontier_pt[0]-robot_pos[0],2) + pow(frontier_pt[1]-robot_pos[1],2));
         
             if ( distance_to_pt < goal_distance)
@@ -541,7 +657,7 @@ std::vector<float> FrontierDB::GetCalculatedWaypoint(){
    
     if (frontier_goals.size() == 0 )
     {
-        calculated_waypoint_ = { 0.0, 0.0 };
+        calculated_waypoint_ = { 0, 0};
     }
 
    return calculated_waypoint_;
