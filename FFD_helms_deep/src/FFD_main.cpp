@@ -89,7 +89,7 @@ void LaserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
     f_database->UpdateClosestFrontierAverage(*contour);
 
     // Publish closest frontier waypoint to robot.
-    vector<float> robot_pos = f_database->GetCalculatedWaypoint(*contour);
+    vector<float> robot_pos = f_database->GetCalculatedWaypoint();
     goal_msg = f_database->PublishClosestFrontierAsNavGoal(robot_pos);
     ROS_INFO("LASER: [%f]", (*msg).header.stamp.toSec());
     }

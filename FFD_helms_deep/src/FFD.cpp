@@ -166,53 +166,37 @@ void Contour::UpdateActiveArea( const nav_msgs::Odometry& msg , const sensor_msg
     
     //Update Private Variable
     robot_pos_ = { robot_x, robot_y };
-    geometry_msgs::Point32 point_closest = laser_coordinates.points[0];
-    geometry_msgs::Point32 point_farthest = laser_coordinates.points[0];
-    
-    // Initialize the distance and x,y values 
-    
-    float xmin = 0.0;
-    float xmax = 0.0;;
-    float ymin = 0.0;;
-    float ymax = 0.0;;
 
-    // Find max and min laser ranges from robot frame.
+    // Initialize the distance and x,y values 
+    float dist_x = 0.0;
+    float dist_y = 0.0;
+    float xmin = laser_coordinates.points[0].x;
+    float xmax = laser_coordinates.points[0].x;
+    float ymin = laser_coordinates.points[0].y;
+    float ymax = laser_coordinates.points[0].y;
+
+    // Find max and min laser values from robot frame.
     for ( const auto& point: laser_coordinates.points )
     {
-        float distance = sqrt(pow(point.x - robot_pos_[0],2)+pow(point.y - robot_pos_[1],2));
+        if ( point.x < xmin )
+        {
+           xmin = point.x;
+        }
+        else if ( point.x > xmax )
+        { 
+           xmax = point.x;
+        }
 
-        if(distance < sqrt(pow(point_closest.x - robot_pos_[0],2)+pow(point_closest.y - robot_pos_[1],2)))
-        {
-            point_closest = point;
+        if ( point.y < ymin )
+        { 
+           ymin = point.y;
         }
-        if(distance > sqrt(pow(point_farthest.x - robot_pos_[0],2)+pow(point_farthest.y - robot_pos_[1],2)))
+        else if ( point.y > ymax )
         {
-            point_farthest = point;
+           ymax = point.y;
         }
-        
     }
     
-    if (point_closest.x < point_farthest.x)
-    {
-        xmin = point_closest.x;
-        xmax = point_farthest.x;
-    }
-    else
-    {
-        xmin = point_farthest.x;
-        xmax = point_closest.x;
-    }
-
-    if (point_closest.y < point_farthest.y)
-    {
-        ymin = point_closest.y;
-        ymax = point_farthest.y;
-    }
-    else
-    {
-        ymin = point_farthest.y;
-        ymax = point_closest.y;
-    }
 
     active_area_.clear();
     active_area_.push_back(xmin);
@@ -401,7 +385,7 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
                  int y_cell = (unsigned int)((y - graph.info.origin.position.y) / graph.info.resolution); 
                 //std::cout << "Cell pos x  " << x_cell <<std::endl;
                 //std::cout << "Cell pos y  " << y_cell <<std::endl;
-                //std::cout << "Im in active area " <<std::endl;
+                std::cout << "Im in active area " <<std::endl;
                 
                 // If Cell is not a frontier note its index 
                 if ( IsCellFrontier(graph,x_cell,y_cell) == false )
@@ -661,11 +645,11 @@ geometry_msgs::PoseStamped FrontierDB::PublishClosestFrontierAsNavGoal( vector<f
 }
 
 
-std::vector<float> FrontierDB::GetCalculatedWaypoint(Contour& c){
+std::vector<float> FrontierDB::GetCalculatedWaypoint(){
    
     if (frontier_goals.size() == 0 )
     {
-        calculated_waypoint_ = c.GetRobotPosition();
+        calculated_waypoint_ = { 0.0 , 0.0 };
     }
 
    return calculated_waypoint_;
