@@ -28,7 +28,9 @@ sudo apt-get install ros-melodic-husky-simulator
 roslaunch husky\_gazebo husky\_playpen.launch
 ```
 2. Start RVIZ 
-
+After the FFD demo has started:
+1. In the bottom left courner of RVIZ click add -> By topic ->  and add both /contor pointcloud and /latest_frontiers pointcloud inorder to see the visualized contor and frontiers. 
+2. In the dispays windo unsubscribe (uncheck) all boxes except for Grid,RobotModel,Navigation,and Static Map. 
 ```
 roslaunch husky\_viz view\_robot.launch
 ```
@@ -38,6 +40,7 @@ roslaunch husky\_viz view\_robot.launch
 roslaunch husky\_navigation gmapping\_demo.launch
 ```   
 ### Start the FFD demo:
+Once the demo has started the robot will begin to map and explore the enviornment. 
 
 ```
  rosrun cs393r\_final\_helms\_deep FFD\_main
