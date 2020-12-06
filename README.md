@@ -17,11 +17,11 @@ Our implementation of FFD was developed and tested on ROS Melodic. Execution on 
 
 Note that these instructions assume that the "desktop-full" version of ROS (which includes the Gazebo physics simulator) is installed. If a the "desktop" or "base" version are instead installed, additional effort may be needed to install Gazebo and maybe RVIZ.
 
-## Download/Install the Husky Navigation demo package
+### Download/Install the Husky Navigation demo package
 
 `sudo apt-get install ros-melodic-husky-simulator`
 
-## In separate terminal windows launch the following
+### In separate terminal windows launch the following
 
 #Start the Husky Simulation Environment: 
 `roslaunch husky\_gazebo husky\_playpen.launch`
@@ -32,6 +32,6 @@ Note that these instructions assume that the "desktop-full" version of ROS (whic
 #Start the gmapping demo:
 `roslaunch husky\_navigation gmapping\_demo.launch`
    
-## Start the FFD demo:
+### Start the FFD demo:
 
  `rosrun cs393r\_final\_helms\_deep FFD\_main`
