@@ -44,5 +44,5 @@ roslaunch husky_navigation gmapping_demo.launch
 Once the demo has started the robot will begin to map and explore the enviornment. 
 
 ```
- rosrun cs393r\_final\_helms\_deep FFD\_main
+ rosrun cs393r_final_helms_deep FFD_main
 ```
