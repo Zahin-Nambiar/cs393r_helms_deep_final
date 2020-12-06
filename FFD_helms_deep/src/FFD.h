@@ -78,7 +78,7 @@ namespace FFD{
         // Frontier is a list of points, the robot goal is the average of the frontiers points. The closest average is the frontier average to go. 
         void UpdateClosestFrontierAverage(Contour& c);
 
-        std::vector<float> GetCalculatedWaypoint();
+        std::vector<float> GetCalculatedWaypoint(Contour c);
         geometry_msgs::PoseStamped PublishClosestFrontierAsNavGoal( std::vector<float> robot_pos );
 
         

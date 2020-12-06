@@ -234,15 +234,28 @@ void FrontierDB::ExtractNewFrontier(Contour& c, const nav_msgs::OccupancyGrid& g
         const int x_cell = (unsigned int)((x - g.info.origin.position.x) / g.info.resolution);
         const int y_cell = (unsigned int)((y - g.info.origin.position.y) / g.info.resolution);
         
+
         //Start populating a new frontier
         if (last_pt_frontier == false && IsCellFrontier(g,x_cell,y_cell))
         {
+            //-------------------------------------------------------------------------------------------------ZAHIN DEBUG
+            if(fabs(x)>200 || fabs(y)>200)//Remove extreme points from frontier
+            {
+                std::cout << "Found extreme point " <<std::endl;
+            }
+            //-------------------------------------------------------------------------------------------------ZAHIN DEBUG
             f.msg.points.push_back(point);
             last_pt_frontier = true;
         }
         //Continue populating a current frontier
         else if(last_pt_frontier == true && IsCellFrontier(g,x_cell,y_cell))
         {
+            //-------------------------------------------------------------------------------------------------ZAHIN DEBUG
+            if(fabs(x)>200 || fabs(y)>200)//Remove extreme points from frontier
+            {
+                std::cout << "Found extreme point " <<std::endl;
+            }
+            //-------------------------------------------------------------------------------------------------ZAHIN DEBUG
             f.msg.points.push_back(point);
         }
         //Save populated frontier, clear and look for new starting point of a new frontier
@@ -312,8 +325,8 @@ bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_ce
     const int x_upper = g.info.width ;
     const int y_upper = g.info.height;
 
-    //Is center cell in 3x3 unknown space?
-    if(g.data[x_cell+y_cell*g.info.width] == -1) 
+    //Is center cell in 3x3 unknown space? -1
+    if(g.data[x_cell+y_cell*g.info.width] == 0) 
     {
           // Find all surrounding cells by adding +/- 1 to col and row 
         for ( int col = x_cell-1; col <= x_cell+1; ++col)
@@ -325,8 +338,8 @@ bool FrontierDB::IsCellFrontier(const nav_msgs::OccupancyGrid& g, const int x_ce
                 if ( !((col == x_cell) && (row == y_cell)) && InGrid(g,col, row) )
                 {
                     int map_loc = col+row*g.info.width;
-                    // Is any one of the surrounding cells open space?
-                    if( col != x_cell && row != y_cell && g.data[map_loc] == 0)
+                    // Is any one of the surrounding cells open space? 0
+                    if( col != x_cell && row != y_cell && g.data[map_loc] == -1)
                     {
                         return true;
                     }
@@ -374,9 +387,9 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
     {
         for (int j = 0; j < frontier_DB.frontiers[i].msg.points.size(); ++j) 
         {
-            const float x = frontier_DB.frontiers[i].msg.points[j].x;
-            const float y = frontier_DB.frontiers[i].msg.points[j].y;
-        
+            float x = frontier_DB.frontiers[i].msg.points[j].x;
+            float y = frontier_DB.frontiers[i].msg.points[j].y;
+            
             // Check if between x min and x max and if beween y min and y max
             if (x >= active_area[0] && x <= active_area[1] && y >= active_area[2] && y <= active_area[3])
             {   
@@ -388,9 +401,9 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
                 std::cout << "Im in active area " <<std::endl;
                 
                 // If Cell is not a frontier note its index 
-                if ( IsCellFrontier(graph,x_cell,y_cell) == false )
+                if ( IsCellFrontier(graph,x_cell,y_cell) == false)
                 {
-                    std::cout << "Cell is not a frontier " <<std::endl;
+                    std::cout << "Cell is not a frontier or extreme point " <<std::endl;
                     no_longer_fc.push_back(j);
                 }
             }
@@ -464,8 +477,8 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
         
         for ( auto& point:frontier.msg.points)
         {   
-            //std::cout << "frontier_DB.frontiers size "<< point.x << std::endl;
-            //std::cout << "This is sumx: "<< sum_x << std::endl;
+            std::cout << "xval for avg Zahin "<< point.x << std::endl;
+            //std::cout <<f "This is sumx: "<< sum_x << std::endl;
             sum_x += fabs(point.x);
             sum_y += fabs(point.y);
         }
@@ -574,7 +587,7 @@ return;
 
 bool FrontierDB::WithinTolerance(geometry_msgs::Point32 point_a, geometry_msgs::Point32 point_b)
 {
-    const float tolerance = 0.01; // m
+    const float tolerance = 0.02; // m
 
     float x = point_a.x;
     float x1 = point_b.x;
@@ -645,11 +658,11 @@ geometry_msgs::PoseStamped FrontierDB::PublishClosestFrontierAsNavGoal( vector<f
 }
 
 
-std::vector<float> FrontierDB::GetCalculatedWaypoint(){
+std::vector<float> FrontierDB::GetCalculatedWaypoint(Contour c){
    
     if (frontier_goals.size() == 0 )
     {
-        calculated_waypoint_ = { 0.0 , 0.0 };
+        calculated_waypoint_ = c.GetRobotPosition();
     }
 
    return calculated_waypoint_;
