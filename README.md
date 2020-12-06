@@ -29,13 +29,12 @@ roslaunch husky\_gazebo husky\_playpen.launch
 ```
 2. Start RVIZ 
 
-- Note: Instructions to preform after the FFD demo has started
-- In the bottom left courner of RVIZ click add -> By topic ->  and add both /contor pointcloud and /latest_frontiers pointcloud inorder to see the visualized contor and frontiers. 
-- In the dispays windo unsubscribe (uncheck) all boxes except for Grid,RobotModel,Navigation,and Static Map. 
-
 ```
 roslaunch husky\_viz view\_robot.launch
 ```
+- Note: Instructions to preform after the FFD demo has started
+- In the bottom left courner of RVIZ click add -> By topic ->  and add both /contor pointcloud and /latest_frontiers pointcloud inorder to see the visualized contor and frontiers. 
+- In the dispays windo unsubscribe (uncheck) all boxes except for Grid,RobotModel,Navigation,and Static Map. 
 
 3. Start the gmapping demo:
 ```
