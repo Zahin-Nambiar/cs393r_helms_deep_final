@@ -25,12 +25,12 @@ sudo apt-get install ros-melodic-husky-simulator
 1. Start the Husky Simulation Environment:
 
 ```
-roslaunch husky\_gazebo husky\_playpen.launch
+roslaunch husky_gazebo husky_playpen.launch
 ```
 2. Start RVIZ 
 
 ```
-roslaunch husky\_viz view\_robot.launch
+roslaunch husky_viz view\_robot.launch
 ```
 - Note: Instructions to preform after the FFD demo has started
 - In the bottom left courner of RVIZ click add -> By topic ->  and add both /contor pointcloud and /latest_frontiers pointcloud inorder to see the visualized contor and frontiers. 
