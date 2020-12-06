@@ -9,6 +9,6 @@ This repo contains Helm's Deep implementation of a FFD algorithm. Instructions f
 4. `cd src`
 4. `git clone <this repository url>` (found in the upper right)
 5. `cd ~/ffd_ws`
-1. `catkin_make`
+6. `catkin_make`
 
 ### Runing our demos. 
