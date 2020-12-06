@@ -30,7 +30,7 @@ roslaunch husky_gazebo husky_playpen.launch
 2. Start RVIZ 
 
 ```
-roslaunch husky_viz view\_robot.launch
+roslaunch husky_viz view_robot.launch
 ```
 - Note: Instructions to preform after the FFD demo has started
 - In the bottom left courner of RVIZ click add -> By topic ->  and add both /contor pointcloud and /latest_frontiers pointcloud inorder to see the visualized contor and frontiers. 
@@ -38,7 +38,7 @@ roslaunch husky_viz view\_robot.launch
 
 3. Start the gmapping demo:
 ```
-roslaunch husky\_navigation gmapping\_demo.launch
+roslaunch husky_navigation gmapping_demo.launch
 ```   
 ### Start the FFD demo:
 Once the demo has started the robot will begin to map and explore the enviornment. 
