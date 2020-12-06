@@ -23,13 +23,13 @@ Note that these instructions assume that the "desktop-full" version of ROS (whic
 
 ### In separate terminal windows launch the following
 
-#Start the Husky Simulation Environment: 
+##Start the Husky Simulation Environment: 
 `roslaunch husky\_gazebo husky\_playpen.launch`
 
-#Start RVIZ 
+##Start RVIZ 
 `roslaunch husky\_viz view\_robot.launch`
 
-#Start the gmapping demo:
+##Start the gmapping demo:
 `roslaunch husky\_navigation gmapping\_demo.launch`
    
 ### Start the FFD demo:
