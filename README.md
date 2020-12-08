@@ -44,5 +44,7 @@ roslaunch husky_navigation gmapping_demo.launch
 Once the demo has started the robot will begin to map and explore the enviornment. The demonstration will complete once the robot has finished constucting a map of the enviornment. 
 
 ```
+ cd ~/ffd_ws/
+ source devel/setup.bash
  rosrun cs393r_final_helms_deep FFD_main
 ```
