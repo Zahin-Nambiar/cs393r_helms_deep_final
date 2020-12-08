@@ -7,6 +7,7 @@
 #include "nav_msgs/OccupancyGrid.h"
 #include "sensor_msgs/LaserScan.h"
 #include "geometry_msgs/TransformStamped.h"
+#include "geometry_msgs/Point32.h"
 #include "nav_msgs/Odometry.h"
 #include "geometry_msgs/PoseStamped.h"
 

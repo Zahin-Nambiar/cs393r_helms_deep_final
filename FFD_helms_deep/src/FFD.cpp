@@ -32,7 +32,6 @@ ros::Publisher contour_pub_;
 ros::Publisher frontier_pub_;
 
 
-
 Contour::Contour(ros::NodeHandle* n) :
     resolution_(0.05) 
     {
@@ -48,12 +47,17 @@ FrontierDB::FrontierDB(ros::NodeHandle* n) :
         frontier_pub_ = n->advertise<sensor_msgs::PointCloud> ("latest_frontiers", 1);
     }
 
+
 void Contour::GenerateContour(const sensor_msgs::PointCloud& laser_coordinates){
 
     contour_.points.clear();
+    
 
+    
     for (int i = 0; i < laser_coordinates.points.size() - 1; ++i)
-    {
+    {   
+        if(fabs(laser_coordinates.points[i].x) < 200 || fabs(laser_coordinates.points[i].y) < 200)
+        {
         const float point1_x = laser_coordinates.points[i].x;
         const float point1_y = laser_coordinates.points[i].y;
         const float point2_x = laser_coordinates.points[i+1].x;
@@ -61,6 +65,7 @@ void Contour::GenerateContour(const sensor_msgs::PointCloud& laser_coordinates){
 
         line2f segment(point1_x,point1_y,point2_x,point2_y);
         SampleLine(segment);
+        }
     }
     contour_pub_.publish(contour_);
     return;
@@ -477,18 +482,18 @@ void FrontierDB::MaintainFrontiers(Contour& c, const nav_msgs::OccupancyGrid& gr
         
         for ( auto& point:frontier.msg.points)
         {   
-            std::cout << "xval for avg Zahin "<< point.x << std::endl;
+            //std::cout << "xval for avg Zahin "<< point.x << std::endl;
             //std::cout <<f "This is sumx: "<< sum_x << std::endl;
             sum_x += fabs(point.x);
             sum_y += fabs(point.y);
         }
        
-        std::cout << "This is xavg x: "<< sum_x << " "<<"This is yavg: " << sum_y << std::endl;
-        std::cout << "This is sumx: "<< sum_x << std::endl;
+        std::cout << "This is sum x: "<< sum_x << " "<<"This is sum y: " << sum_y << std::endl;
+        
     
         float x_average = sum_x/frontier.msg.points.size();
         float y_average = sum_y/frontier.msg.points.size();
-        std::cout << "size of front: "<< frontier.msg.points.size() << std::endl;
+        std::cout << "size of frontier: "<< frontier.msg.points.size() << std::endl;
 
         vector<float> frontier_average_pt = {x_average,y_average};
         std::cout << "This is fta x: "<< frontier_average_pt[0] <<" "<< "This is fta y: " << frontier_average_pt[1] << std::endl;
@@ -587,7 +592,7 @@ return;
 
 bool FrontierDB::WithinTolerance(geometry_msgs::Point32 point_a, geometry_msgs::Point32 point_b)
 {
-    const float tolerance = 0.02; // m
+    const float tolerance = 0.015; // m
 
     float x = point_a.x;
     float x1 = point_b.x;
@@ -617,7 +622,7 @@ void FrontierDB::UpdateClosestFrontierAverage( Contour& c )
     {
         for ( auto& frontier_pt: frontier_goals )
         {
-            std::cout << " this is front point x : " << frontier_pt[0] << std::endl;
+            //std::cout << " this is front point x : " << frontier_pt[0] << std::endl;
             float distance_to_pt = sqrt(pow(frontier_pt[0]-robot_pos[0],2) + pow(frontier_pt[1]-robot_pos[1],2));
         
             if ( distance_to_pt < goal_distance)
@@ -664,8 +669,9 @@ std::vector<float> FrontierDB::GetCalculatedWaypoint(Contour c){
     {
         calculated_waypoint_ = c.GetRobotPosition();
     }
-
-   return calculated_waypoint_;
+    std::cout << " this is cal waypoint x : " << calculated_waypoint_[0] << " this is cal waypoint y : " << calculated_waypoint_[1] << std::endl;
+    std::cout << " this is cur position x : " << c.GetRobotPosition()[0] << " this is cur position y : " << c.GetRobotPosition()[1] << std::endl;
+    return calculated_waypoint_;
 }
 
 } // End of FrontierDB Class 
