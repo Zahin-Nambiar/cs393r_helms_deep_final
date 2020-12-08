@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # cs393r_helms_deep_final
 Final Project for Autonomous Robots Class
 =======
@@ -52,4 +52,4 @@ Once the demo has started the robot will begin to map and explore the enviornmen
  source devel/setup.bash
  rosrun cs393r_final_helms_deep FFD_main
 ```
->>>>>>> 060efa1075484d5557346cfa5d6f398e9b1e959d
+
